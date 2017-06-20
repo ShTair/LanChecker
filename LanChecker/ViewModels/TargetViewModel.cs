@@ -1,27 +1,49 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LanChecker.ViewModels
 {
-    class TargetViewModel
+    class TargetViewModel : INotifyPropertyChanged
     {
         private static SemaphoreSlim _sem = new SemaphoreSlim(1);
 
         private byte[] _mac;
+        private DateTime _lastReach;
 
         private Task _run;
+        private CancellationTokenSource _cts;
 
         private uint _host;
 
-        private CancellationTokenSource _cts;
+        public event Action Reached;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public int ElapsedMinutes
+        {
+            get { return _ElapsedMinutes; }
+            set
+            {
+                if (_ElapsedMinutes == value) return;
+                _ElapsedMinutes = value;
+                PropertyChanged?.Invoke(this, _ElapsedMinutesChangedEventArgs);
+            }
+        }
+        private int _ElapsedMinutes;
+        private PropertyChangedEventArgs _ElapsedMinutesChangedEventArgs = new PropertyChangedEventArgs(nameof(ElapsedMinutes));
+
+        public int IPAddress { get; }
 
         public TargetViewModel(uint host)
         {
             _mac = new byte[6];
+            _lastReach = DateTime.Now;
 
             _host = host;
+            IPAddress = (int)(host >> 24);
         }
 
         public void Start()
@@ -48,10 +70,18 @@ namespace LanChecker.ViewModels
                     if (_cts.IsCancellationRequested) break;
 
                     var result = SendArp();
+                    ElapsedMinutes = (int)(DateTime.Now - _lastReach).TotalMinutes;
+
                     if (result != old)
                     {
                         Console.WriteLine($"{_host >> 24} {result}");
                         old = result;
+                    }
+
+                    if (result)
+                    {
+                        _lastReach = DateTime.Now;
+                        Reached?.Invoke();
                     }
                 }
                 finally { _sem.Release(); }

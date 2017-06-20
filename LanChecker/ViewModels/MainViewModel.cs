@@ -1,27 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace LanChecker.ViewModels
 {
     class MainViewModel : IDisposable
     {
-        private List<TargetViewModel> _targets;
+        private ObservableCollection<TargetViewModel> Targets;
 
         public MainViewModel()
         {
-            _targets = GetTargetHosts().Select(t =>
+            var d = Dispatcher.CurrentDispatcher;
+
+            Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts().Select(t => new TargetViewModel(t)));
+            foreach (var target in Targets)
             {
-                var target = new TargetViewModel(t);
+                target.Reached += () =>
+                {
+                    d.Invoke(() =>
+                    {
+                        Targets.Remove(target);
+                        Targets.Insert(0, target);
+                    });
+                };
+
                 target.Start();
-                return target;
-            }).ToList();
+            }
         }
 
         public void Dispose()
         {
-            Task.WhenAll(_targets.Select(t => t.Stop())).Wait();
+            Task.WhenAll(Targets.Select(t => t.Stop())).Wait();
         }
 
         private IEnumerable<uint> GetTargetHosts()
