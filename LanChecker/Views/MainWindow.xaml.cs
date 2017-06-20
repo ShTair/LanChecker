@@ -13,5 +13,10 @@ namespace LanChecker.Views
             InitializeComponent();
             DataContext = new MainViewModel();
         }
+
+        private void Window_Closed(object sender, System.EventArgs e)
+        {
+            ((MainViewModel)DataContext).Dispose();
+        }
     }
 }
