@@ -6,11 +6,14 @@
         xmlns:local="clr-namespace:LanChecker.Views"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525" Closed="Window_Closed">
-    <Grid>
-        <ItemsControl ItemsSource="{Binding Targets}">
+    <Grid Margin="9" HorizontalAlignment="Left">
+        <ItemsControl ItemsSource="{Binding Targets}" Width="100">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding IPAddress}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="50" Text="{Binding IPAddress}" />
+                        <TextBlock Width="50" Text="{Binding ElapsedMinutes}" />
+                    </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

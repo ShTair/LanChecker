@@ -9,7 +9,7 @@ namespace LanChecker.ViewModels
 {
     class MainViewModel : IDisposable
     {
-        private ObservableCollection<TargetViewModel> Targets;
+        public ObservableCollection<TargetViewModel> Targets { get; }
 
         public MainViewModel()
         {

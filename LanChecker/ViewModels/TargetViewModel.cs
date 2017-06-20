@@ -70,7 +70,6 @@ namespace LanChecker.ViewModels
                     if (_cts.IsCancellationRequested) break;
 
                     var result = SendArp();
-                    ElapsedMinutes = (int)(DateTime.Now - _lastReach).TotalMinutes;
 
                     if (result != old)
                     {
@@ -83,6 +82,8 @@ namespace LanChecker.ViewModels
                         _lastReach = DateTime.Now;
                         Reached?.Invoke();
                     }
+
+                    ElapsedMinutes = (int)(DateTime.Now - _lastReach).TotalMinutes;
                 }
                 finally { _sem.Release(); }
 
