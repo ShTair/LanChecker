@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 
 namespace LanChecker.ViewModels
 {
@@ -19,7 +18,7 @@ namespace LanChecker.ViewModels
 
         public void Dispose()
         {
-            Task.WhenAll(Targets.Select(t => t.Stop())).Wait();
+            Task.WhenAll(Targets.Select(t => t.Stop())).Wait(30000);
         }
 
         private IEnumerable<uint> GetTargetHosts()
