@@ -16,6 +16,11 @@
     </Window.Resources>
     <Grid Margin="9" HorizontalAlignment="Left">
         <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
