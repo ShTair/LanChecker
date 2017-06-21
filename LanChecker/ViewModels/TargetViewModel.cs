@@ -43,7 +43,7 @@ namespace LanChecker.ViewModels
                 PropertyChanged?.Invoke(this, _ScoreChangedEventArgs);
             }
         }
-        private double _Score;
+        private double _Score = 1440;
         private PropertyChangedEventArgs _ScoreChangedEventArgs = new PropertyChangedEventArgs(nameof(Score));
 
         public int IPAddress { get; }
@@ -94,7 +94,7 @@ namespace LanChecker.ViewModels
                     }
 
                     ElapsedMinutes = (DateTime.Now - _lastReach).TotalMinutes;
-                    Score = (Score * 99 + ElapsedMinutes) / 100;
+                    Score = (Score * 29 + Math.Min(ElapsedMinutes, 1440)) / 30;
                 }
                 finally { _sem.Release(); }
 
