@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LanChecker.Views"
         xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         mc:Ignorable="d"
         Title="MainWindow" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <Window.Resources>
@@ -18,7 +20,15 @@
         <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel />
+                    <StackPanel>
+                        <i:Interaction.Behaviors>
+                            <ei:FluidMoveBehavior AppliesTo="Children" Duration="0:0:10">
+                                <ei:FluidMoveBehavior.EaseY>
+                                    <CubicEase EasingMode="EaseOut" />
+                                </ei:FluidMoveBehavior.EaseY>
+                            </ei:FluidMoveBehavior>
+                        </i:Interaction.Behaviors>
+                    </StackPanel>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
