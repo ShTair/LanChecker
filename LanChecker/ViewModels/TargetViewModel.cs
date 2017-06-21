@@ -94,7 +94,7 @@ namespace LanChecker.ViewModels
                     }
 
                     ElapsedMinutes = Math.Min(1440, (DateTime.Now - _lastReach).TotalMinutes);
-                    Score = (Score * 29 + (old ? 0 : 100)) / 30;
+                    Score = (Score * 29 + Math.Min(100, ElapsedMinutes)) / 30;
                 }
                 finally { _sem.Release(); }
 
