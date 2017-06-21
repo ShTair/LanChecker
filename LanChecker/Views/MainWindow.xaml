@@ -4,15 +4,24 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LanChecker.Views"
+        xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d"
         Title="MainWindow" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+    <Window.Resources>
+        <CollectionViewSource x:Key="Source1" Source="{Binding Targets}">
+            <CollectionViewSource.SortDescriptions>
+                <ComponentModel:SortDescription Direction="Ascending" PropertyName="Score" />
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+    </Window.Resources>
     <Grid Margin="9" HorizontalAlignment="Left">
-        <ItemsControl ItemsSource="{Binding Targets}" Width="100">
+        <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Width="50" Text="{Binding IPAddress}" TextAlignment="Right" />
-                        <TextBlock Width="50" Text="{Binding ElapsedMinutes}" TextAlignment="Right" />
+                        <TextBlock Width="50" Text="{Binding ElapsedMinutes, StringFormat=0.0}" TextAlignment="Right" />
+                        <TextBlock Width="50" Text="{Binding Score, StringFormat=0.0}" TextAlignment="Right" />
                     </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

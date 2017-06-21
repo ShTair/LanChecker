@@ -13,22 +13,8 @@ namespace LanChecker.ViewModels
 
         public MainViewModel()
         {
-            var d = Dispatcher.CurrentDispatcher;
-
             Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts().Select(t => new TargetViewModel(t)));
-            foreach (var target in Targets)
-            {
-                target.Reached += () =>
-                {
-                    d.Invoke(() =>
-                    {
-                        Targets.Remove(target);
-                        Targets.Insert(0, target);
-                    });
-                };
-
-                target.Start();
-            }
+            foreach (var target in Targets) target.Start();
         }
 
         public void Dispose()
