@@ -5,14 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LanChecker.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" Closed="Window_Closed">
+        Title="MainWindow" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <Grid Margin="9" HorizontalAlignment="Left">
         <ItemsControl ItemsSource="{Binding Targets}" Width="100">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Width="50" Text="{Binding IPAddress}" />
-                        <TextBlock Width="50" Text="{Binding ElapsedMinutes}" />
+                        <TextBlock Width="50" Text="{Binding IPAddress}" TextAlignment="Right" />
+                        <TextBlock Width="50" Text="{Binding ElapsedMinutes}" TextAlignment="Right" />
                     </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
