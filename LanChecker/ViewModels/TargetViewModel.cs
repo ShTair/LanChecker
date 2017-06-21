@@ -30,7 +30,7 @@ namespace LanChecker.ViewModels
                 PropertyChanged?.Invoke(this, _ElapsedMinutesChangedEventArgs);
             }
         }
-        private double _ElapsedMinutes;
+        private double _ElapsedMinutes = 1440;
         private PropertyChangedEventArgs _ElapsedMinutesChangedEventArgs = new PropertyChangedEventArgs(nameof(ElapsedMinutes));
 
         public double Score
@@ -43,7 +43,7 @@ namespace LanChecker.ViewModels
                 PropertyChanged?.Invoke(this, _ScoreChangedEventArgs);
             }
         }
-        private double _Score = 1440;
+        private double _Score = 100;
         private PropertyChangedEventArgs _ScoreChangedEventArgs = new PropertyChangedEventArgs(nameof(Score));
 
         public int IPAddress { get; }
@@ -51,7 +51,7 @@ namespace LanChecker.ViewModels
         public TargetViewModel(uint host)
         {
             _mac = new byte[6];
-            _lastReach = DateTime.Now;
+            _lastReach = DateTime.Now.AddDays(-1);
 
             _host = host;
             IPAddress = (int)(host >> 24);
@@ -93,8 +93,8 @@ namespace LanChecker.ViewModels
                         _lastReach = DateTime.Now;
                     }
 
-                    ElapsedMinutes = (DateTime.Now - _lastReach).TotalMinutes;
-                    Score = (Score * 29 + Math.Min(ElapsedMinutes, 1440)) / 30;
+                    ElapsedMinutes = Math.Min(1440, (DateTime.Now - _lastReach).TotalMinutes);
+                    Score = (Score * 29 + (old ? 0 : 100)) / 30;
                 }
                 finally { _sem.Release(); }
 
