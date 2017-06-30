@@ -12,7 +12,7 @@
     <Window.Resources>
         <CollectionViewSource x:Key="Source1" Source="{Binding Targets}" IsLiveSortingRequested="True">
             <CollectionViewSource.SortDescriptions>
-                <ComponentModel:SortDescription Direction="Ascending" PropertyName="Score" />
+                <ComponentModel:SortDescription Direction="Ascending" PropertyName="Elapsed" />
                 <ComponentModel:SortDescription Direction="Ascending" PropertyName="IPAddress" />
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
@@ -36,9 +36,9 @@
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Width="25" Text="{Binding IPAddress}" TextAlignment="Right" />
-                        <TextBlock Width="50" Text="{Binding ElapsedMinutes, StringFormat=0.0}" TextAlignment="Right" />
+                        <TextBlock Width="50" Text="{Binding Elapsed, StringFormat=0.0000}" TextAlignment="Right" />
                         <TextBlock Width="35" Text="{Binding Score, StringFormat=0.0}" TextAlignment="Right" />
-                        <TextBlock Width="110" Text="{Binding MacAddress}" TextAlignment="Right" />
+                        <TextBlock Text="{Binding MacAddress}" Margin="5,0,0,0" />
                     </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

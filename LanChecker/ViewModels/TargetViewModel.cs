@@ -21,18 +21,18 @@ namespace LanChecker.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public double ElapsedMinutes
+        public double Elapsed
         {
-            get { return _ElapsedMinutes; }
+            get { return _Elapsed; }
             set
             {
-                if (_ElapsedMinutes == value) return;
-                _ElapsedMinutes = value;
-                PropertyChanged?.Invoke(this, _ElapsedMinutesChangedEventArgs);
+                if (_Elapsed == value) return;
+                _Elapsed = value;
+                PropertyChanged?.Invoke(this, _ElapsedChangedEventArgs);
             }
         }
-        private double _ElapsedMinutes = 1440;
-        private PropertyChangedEventArgs _ElapsedMinutesChangedEventArgs = new PropertyChangedEventArgs(nameof(ElapsedMinutes));
+        private double _Elapsed = 3;
+        private PropertyChangedEventArgs _ElapsedChangedEventArgs = new PropertyChangedEventArgs(nameof(Elapsed));
 
         public double Score
         {
@@ -66,7 +66,7 @@ namespace LanChecker.ViewModels
         public TargetViewModel(uint host)
         {
             _mac = new byte[6];
-            _lastReach = DateTime.Now.AddDays(-1);
+            _lastReach = DateTime.Now.AddDays(-3);
 
             _host = host;
             IPAddress = (int)(host >> 24);
@@ -109,8 +109,8 @@ namespace LanChecker.ViewModels
                         _lastReach = DateTime.Now;
                     }
 
-                    ElapsedMinutes = Math.Min(1440, (DateTime.Now - _lastReach).TotalMinutes);
-                    Score = Math.Min(100, (Score * 29 + ElapsedMinutes) / 30);
+                    Elapsed = Math.Min(3, (DateTime.Now - _lastReach).TotalDays);
+                    Score = Math.Min(100, (Score * 29 + Elapsed * 24 * 60) / 30);
                 }
                 finally { _sem.Release(); }
 
