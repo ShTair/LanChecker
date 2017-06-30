@@ -40,10 +40,11 @@ namespace LanChecker.ViewModels
             {
                 if (_Score == value) return;
                 _Score = value;
+                if (_Score < 0.1) _Score = 0;
                 PropertyChanged?.Invoke(this, _ScoreChangedEventArgs);
             }
         }
-        private double _Score = 100;
+        private double _Score;
         private PropertyChangedEventArgs _ScoreChangedEventArgs = new PropertyChangedEventArgs(nameof(Score));
 
         public int IPAddress { get; }
@@ -94,7 +95,7 @@ namespace LanChecker.ViewModels
                     }
 
                     ElapsedMinutes = Math.Min(1440, (DateTime.Now - _lastReach).TotalMinutes);
-                    Score = (Score * 29 + Math.Min(100, ElapsedMinutes)) / 30;
+                    Score = Math.Min(100, (Score * 29 + ElapsedMinutes) / 30);
                 }
                 finally { _sem.Release(); }
 

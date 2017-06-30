@@ -13,6 +13,7 @@
         <CollectionViewSource x:Key="Source1" Source="{Binding Targets}" IsLiveSortingRequested="True">
             <CollectionViewSource.SortDescriptions>
                 <ComponentModel:SortDescription Direction="Ascending" PropertyName="Score" />
+                <ComponentModel:SortDescription Direction="Ascending" PropertyName="IPAddress" />
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
     </Window.Resources>
