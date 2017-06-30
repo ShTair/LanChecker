@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,6 +48,19 @@ namespace LanChecker.ViewModels
         private double _Score;
         private PropertyChangedEventArgs _ScoreChangedEventArgs = new PropertyChangedEventArgs(nameof(Score));
 
+        public string MacAddress
+        {
+            get { return _MacAddress; }
+            set
+            {
+                if (_MacAddress == value) return;
+                _MacAddress = value;
+                PropertyChanged?.Invoke(this, _MacAddressChangedEventArgs);
+            }
+        }
+        private string _MacAddress;
+        private PropertyChangedEventArgs _MacAddressChangedEventArgs = new PropertyChangedEventArgs(nameof(MacAddress));
+
         public int IPAddress { get; }
 
         public TargetViewModel(uint host)
@@ -91,6 +105,7 @@ namespace LanChecker.ViewModels
 
                     if (result)
                     {
+                        MacAddress = string.Join(":", _mac.Select(t => t.ToString("X2")));
                         _lastReach = DateTime.Now;
                     }
 
