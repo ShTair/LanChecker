@@ -10,9 +10,9 @@ namespace LanChecker.ViewModels
     {
         public ObservableCollection<TargetViewModel> Targets { get; }
 
-        public MainViewModel()
+        public MainViewModel(uint sub, uint start, int count)
         {
-            Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts().Select(t => new TargetViewModel(t)));
+            Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts(sub, start, count).Select(t => new TargetViewModel(t)));
             foreach (var target in Targets) target.Start();
         }
 
@@ -21,12 +21,12 @@ namespace LanChecker.ViewModels
             Task.WhenAll(Targets.Select(t => t.Stop())).Wait(30000);
         }
 
-        private IEnumerable<uint> GetTargetHosts()
+        private IEnumerable<uint> GetTargetHosts(uint sub, uint start, int count)
         {
-            uint v = 192 + (168 << 8) + (10 << 16);
-            for (uint i = 0; i < 32; i++)
+            uint v = 192 + (168 << 8) + (sub << 16);
+            for (uint i = 0; i < count; i++)
             {
-                yield return v + ((11 + i) << 24);
+                yield return v + ((start + i) << 24);
             }
         }
     }

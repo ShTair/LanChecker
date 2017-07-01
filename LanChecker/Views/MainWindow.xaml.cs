@@ -1,4 +1,5 @@
 ﻿using LanChecker.ViewModels;
+using System;
 using System.Windows;
 
 namespace LanChecker.Views
@@ -10,11 +11,13 @@ namespace LanChecker.Views
     {
         public MainWindow()
         {
+            var args = Environment.GetCommandLineArgs();
+
             InitializeComponent();
-            DataContext = new MainViewModel();
+            DataContext = new MainViewModel(uint.Parse(args[1]), uint.Parse(args[2]), int.Parse(args[3]));
         }
 
-        private void Window_Closed(object sender, System.EventArgs e)
+        private void Window_Closed(object sender, EventArgs e)
         {
             ((MainViewModel)DataContext).Dispose();
         }
