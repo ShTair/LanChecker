@@ -21,18 +21,32 @@ namespace LanChecker.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public double Elapsed
+        public TimeSpan Elapsed
         {
             get { return _Elapsed; }
             set
             {
                 if (_Elapsed == value) return;
                 _Elapsed = value;
+                ElapsedString = value.ToString(@"d\.hh\:mm");
                 PropertyChanged?.Invoke(this, _ElapsedChangedEventArgs);
             }
         }
-        private double _Elapsed = 3;
+        private TimeSpan _Elapsed;
         private PropertyChangedEventArgs _ElapsedChangedEventArgs = new PropertyChangedEventArgs(nameof(Elapsed));
+
+        public string ElapsedString
+        {
+            get { return _ElapsedString; }
+            set
+            {
+                if (_ElapsedString == value) return;
+                _ElapsedString = value;
+                PropertyChanged?.Invoke(this, _ElapsedStringChangedEventArgs);
+            }
+        }
+        private string _ElapsedString;
+        private PropertyChangedEventArgs _ElapsedStringChangedEventArgs = new PropertyChangedEventArgs(nameof(ElapsedString));
 
         public double Score
         {
@@ -67,6 +81,7 @@ namespace LanChecker.ViewModels
         {
             _mac = new byte[6];
             _lastReach = DateTime.Now.AddDays(-3);
+            Elapsed = TimeSpan.FromDays(3);
 
             _host = host;
             IPAddress = (int)(host >> 24);
@@ -109,8 +124,9 @@ namespace LanChecker.ViewModels
                         _lastReach = DateTime.Now;
                     }
 
-                    Elapsed = Math.Min(3, (DateTime.Now - _lastReach).TotalDays);
-                    Score = Math.Min(100, (Score * 29 + Elapsed * 24 * 60) / 30);
+                    var e = DateTime.Now - _lastReach;
+                    Elapsed = e.TotalDays < 3 ? e : TimeSpan.FromDays(3);
+                    Score = Math.Min(100, (Score * 29 + Elapsed.TotalMinutes) / 30);
                 }
                 finally { _sem.Release(); }
 
