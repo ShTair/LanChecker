@@ -19,6 +19,8 @@ namespace LanChecker.ViewModels
 
         private uint _host;
 
+        public event Action<bool> StatusChanged;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public TimeSpan Elapsed
@@ -115,7 +117,7 @@ namespace LanChecker.ViewModels
                     if (result != old)
                     {
                         Console.WriteLine($"{_host >> 24} {result}");
-                        old = result;
+                        StatusChanged.Invoke(old = result);
                     }
 
                     if (result)
