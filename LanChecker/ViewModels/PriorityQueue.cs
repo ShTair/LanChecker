@@ -33,6 +33,15 @@ namespace LanChecker.ViewModels
             return con.Value;
         }
 
+        public TValue Peek()
+        {
+            if (_first.Next == _end) return default(TValue);
+            return _first.Next.Value;
+        }
+
+        public void ChangeScore(TScore score)
+        { }
+
         private class _Container
         {
             public _Container Prev;
