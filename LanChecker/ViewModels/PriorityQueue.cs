@@ -18,7 +18,24 @@ namespace LanChecker.ViewModels
         }
 
         public void Queue(TScore score, TValue value)
-        { }
+        {
+            var ct = _first;
+            var con = new _Container { Score = score, Value = value };
+            int index = 0;
+
+            while (ct.Next != _end && _comparison(ct.Next.Score, score) < 0)
+            {
+                ct = ct.Next;
+                index++;
+            }
+
+            con.Prev = ct;
+            con.Next = ct.Next;
+            con.Prev.Next = con;
+            con.Next.Prev = con;
+
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value, index));
+        }
 
         public TValue Dequeue()
         {
