@@ -62,7 +62,24 @@ namespace LanChecker.ViewModels
         }
 
         public void ChangeScore(TScore score)
-        { }
+        {
+            if (_first.Next == _end) return;
+
+            var con = _first.Next;
+            con.Next.Prev = con.Prev;
+            con.Prev.Next = con.Next;
+
+            var ct = _first;
+            int index = 0;
+
+            while (ct.Next != _end && _comparison(ct.Next.Score, score) < 0)
+            {
+                ct = ct.Next;
+                index++;
+            }
+
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, con.Value, 0, index));
+        }
 
         private class _Container
         {
