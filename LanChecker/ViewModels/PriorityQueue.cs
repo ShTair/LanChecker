@@ -14,6 +14,11 @@ namespace LanChecker.ViewModels
 
         public PriorityQueue(Func<TScore, TScore, int> comparison)
         {
+            _first = new _Container();
+            _end = new _Container();
+            _first.Next = _end;
+            _end.Prev = _first;
+
             _comparison = comparison;
         }
 
