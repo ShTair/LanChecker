@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -36,11 +37,12 @@ namespace LanChecker.ViewModels
             Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts(sub, start, count).Select(t => new TargetViewModel(t)));
             foreach (var target in Targets)
             {
-                target.StatusChanged += status =>
+                target.StatusChanged += (status, time) =>
                 {
                     lock (_counterLock)
                     {
                         _counter += status ? 1 : -1;
+                        File.AppendAllLines($"log_{DateTime.Now:yyyyMMdd}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}" });
                     }
 
                     Status = $"Reach: {_counter}";

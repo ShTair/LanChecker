@@ -19,7 +19,7 @@ namespace LanChecker.ViewModels
 
         private uint _host;
 
-        public event Action<bool> StatusChanged;
+        public event Action<bool, DateTime> StatusChanged;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -95,6 +95,7 @@ namespace LanChecker.ViewModels
             {
                 if (_IsIn == value) return;
                 _IsIn = value;
+                StatusChanged.Invoke(value, _lastReach);
                 PropertyChanged?.Invoke(this, _IsInChangedEventArgs);
             }
         }
@@ -139,7 +140,6 @@ namespace LanChecker.ViewModels
                     if (result != old)
                     {
                         Console.WriteLine($"{_host >> 24} {result}");
-                        StatusChanged.Invoke(old = result);
                     }
 
                     var now = DateTime.Now;
