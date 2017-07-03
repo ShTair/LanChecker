@@ -56,20 +56,6 @@ namespace LanChecker.ViewModels
         private string _ElapsedString;
         private PropertyChangedEventArgs _ElapsedStringChangedEventArgs = new PropertyChangedEventArgs(nameof(ElapsedString));
 
-        public double Score
-        {
-            get { return _Score; }
-            set
-            {
-                if (_Score == value) return;
-                _Score = value;
-                if (_Score < 0.1) _Score = 0;
-                PropertyChanged?.Invoke(this, _ScoreChangedEventArgs);
-            }
-        }
-        private double _Score;
-        private PropertyChangedEventArgs _ScoreChangedEventArgs = new PropertyChangedEventArgs(nameof(Score));
-
         public string MacAddress
         {
             get { return _MacAddress; }
@@ -166,7 +152,6 @@ namespace LanChecker.ViewModels
 
                     var e = now - _lastReach;
                     Elapsed = e.TotalDays < 3 ? e : TimeSpan.FromDays(3);
-                    Score = Math.Min(100, (Score * 29 + Elapsed.TotalMinutes) / 30);
                 }
                 finally { _sem.Release(); }
 

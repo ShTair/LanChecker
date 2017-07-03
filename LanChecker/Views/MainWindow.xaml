@@ -43,8 +43,7 @@
                         <StackPanel Margin="1" Orientation="Horizontal" Background="{Binding Status, Converter={StaticResource ColorConverter}}">
                             <TextBlock Width="25" Text="{Binding IPAddress}" TextAlignment="Right" />
                             <TextBlock Width="50" Text="{Binding ElapsedString}" TextAlignment="Right" />
-                            <TextBlock Width="35" Text="{Binding Score, StringFormat=0.0}" TextAlignment="Right" />
-                            <TextBlock Text="{Binding MacAddress}" Margin="5,0,0,0" />
+                            <TextBlock Text="{Binding MacAddress}" Margin="5,0" />
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
