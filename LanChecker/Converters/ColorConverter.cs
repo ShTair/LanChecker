@@ -9,7 +9,7 @@ namespace LanChecker.Converters
     {
         private static Brush _red = new SolidColorBrush(Color.FromArgb(100, 255, 0, 0));
         private static Brush _green = new SolidColorBrush(Color.FromArgb(100, 0, 255, 0));
-        private static Brush _yellow = new SolidColorBrush(Color.FromArgb(100, 0, 255, 255));
+        private static Brush _yellow = new SolidColorBrush(Color.FromArgb(100, 255, 255, 0));
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
