@@ -30,7 +30,13 @@ namespace LanChecker.ViewModels
             {
                 if (_Elapsed == value) return;
                 _Elapsed = value;
+
+                if (value == TimeSpan.Zero) Status = 0;
+                else if (value < TimeSpan.FromHours(1)) Status = 1;
+                else Status = 2;
+
                 ElapsedString = value.ToString(@"d\.hh\:mm");
+
                 PropertyChanged?.Invoke(this, _ElapsedChangedEventArgs);
             }
         }
@@ -79,6 +85,36 @@ namespace LanChecker.ViewModels
 
         public int IPAddress { get; }
 
+        public int Status
+        {
+            get { return _Status; }
+            set
+            {
+                if (_Status == value) return;
+                _Status = value;
+
+                if (value == 0 || value == 1) IsIn = true;
+                else IsIn = false;
+
+                PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
+            }
+        }
+        private int _Status;
+        private PropertyChangedEventArgs _StatusChangedEventArgs = new PropertyChangedEventArgs(nameof(Status));
+
+        public bool IsIn
+        {
+            get { return _IsIn; }
+            set
+            {
+                if (_IsIn == value) return;
+                _IsIn = value;
+                PropertyChanged?.Invoke(this, _IsInChangedEventArgs);
+            }
+        }
+        private bool _IsIn;
+        private PropertyChangedEventArgs _IsInChangedEventArgs = new PropertyChangedEventArgs(nameof(IsIn));
+
         public TargetViewModel(uint host)
         {
             _mac = new byte[6];
@@ -120,13 +156,15 @@ namespace LanChecker.ViewModels
                         StatusChanged.Invoke(old = result);
                     }
 
+                    var now = DateTime.Now;
+
                     if (result)
                     {
                         MacAddress = string.Join(":", _mac.Select(t => t.ToString("X2")));
-                        _lastReach = DateTime.Now;
+                        _lastReach = now;
                     }
 
-                    var e = DateTime.Now - _lastReach;
+                    var e = now - _lastReach;
                     Elapsed = e.TotalDays < 3 ? e : TimeSpan.FromDays(3);
                     Score = Math.Min(100, (Score * 29 + Elapsed.TotalMinutes) / 30);
                 }

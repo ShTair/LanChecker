@@ -7,15 +7,17 @@
         xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+        xmlns:cv="clr-namespace:LanChecker.Converters"
         mc:Ignorable="d"
         Title="MainWindow" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <Window.Resources>
         <CollectionViewSource x:Key="Source1" Source="{Binding Targets}" IsLiveSortingRequested="True">
             <CollectionViewSource.SortDescriptions>
-                <ComponentModel:SortDescription Direction="Ascending" PropertyName="Elapsed" />
+                <ComponentModel:SortDescription Direction="Descending" PropertyName="IsIn" />
                 <ComponentModel:SortDescription Direction="Ascending" PropertyName="IPAddress" />
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
+        <cv:ColorConverter x:Key="ColorConverter" />
     </Window.Resources>
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
@@ -38,7 +40,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Margin="1" Orientation="Horizontal" Background="{Binding Status, Converter={StaticResource ColorConverter}}">
                             <TextBlock Width="25" Text="{Binding IPAddress}" TextAlignment="Right" />
                             <TextBlock Width="50" Text="{Binding ElapsedString}" TextAlignment="Right" />
                             <TextBlock Width="35" Text="{Binding Score, StringFormat=0.0}" TextAlignment="Right" />
