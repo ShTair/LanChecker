@@ -18,12 +18,21 @@
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
         <cv:ColorConverter x:Key="ColorConverter" />
+        <StackPanel x:Key="ListPanel">
+            <i:Interaction.Behaviors>
+                <ei:FluidMoveBehavior AppliesTo="Children" Duration="0:0:10">
+                    <ei:FluidMoveBehavior.EaseY>
+                        <CubicEase EasingMode="EaseOut" />
+                    </ei:FluidMoveBehavior.EaseY>
+                </ei:FluidMoveBehavior>
+            </i:Interaction.Behaviors>
+        </StackPanel>
     </Window.Resources>
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem Content="{Binding Status}" />
         </StatusBar>
-        <Grid Margin="9" HorizontalAlignment="Left">
+        <StackPanel Orientation="Horizontal">
             <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -40,15 +49,70 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Margin="1" Orientation="Horizontal" Background="{Binding Status, Converter={StaticResource ColorConverter}}">
-                            <TextBlock Width="25" Text="{Binding IPAddress}" TextAlignment="Right" />
-                            <TextBlock Width="50" Text="{Binding ElapsedString}" TextAlignment="Right" />
-                            <TextBlock Width="100" Text="{Binding MacAddress}" Margin="5,0" />
-                            <TextBlock Text="{Binding Name}" Margin="5,0" />
-                        </StackPanel>
+                        <TextBlock Padding="6,0,3,0" Margin="2,1,0,1" Text="{Binding IPAddress}" TextAlignment="Right" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </Grid>
+            <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel>
+                            <i:Interaction.Behaviors>
+                                <ei:FluidMoveBehavior AppliesTo="Children" Duration="0:0:10">
+                                    <ei:FluidMoveBehavior.EaseY>
+                                        <CubicEase EasingMode="EaseOut" />
+                                    </ei:FluidMoveBehavior.EaseY>
+                                </ei:FluidMoveBehavior>
+                            </i:Interaction.Behaviors>
+                        </StackPanel>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Padding="3,0" Margin="0,1" Text="{Binding ElapsedString}" TextAlignment="Right" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel>
+                            <i:Interaction.Behaviors>
+                                <ei:FluidMoveBehavior AppliesTo="Children" Duration="0:0:10">
+                                    <ei:FluidMoveBehavior.EaseY>
+                                        <CubicEase EasingMode="EaseOut" />
+                                    </ei:FluidMoveBehavior.EaseY>
+                                </ei:FluidMoveBehavior>
+                            </i:Interaction.Behaviors>
+                        </StackPanel>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Padding="3,0" Margin="0,1" Text="{Binding MacAddress}" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel>
+                            <i:Interaction.Behaviors>
+                                <ei:FluidMoveBehavior AppliesTo="Children" Duration="0:0:10">
+                                    <ei:FluidMoveBehavior.EaseY>
+                                        <CubicEase EasingMode="EaseOut" />
+                                    </ei:FluidMoveBehavior.EaseY>
+                                </ei:FluidMoveBehavior>
+                            </i:Interaction.Behaviors>
+                        </StackPanel>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Padding="3,0,6,0" Margin="0,1,2,1" Text="{Binding Name}" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
     </DockPanel>
 </Window>
