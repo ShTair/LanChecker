@@ -9,7 +9,7 @@
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         xmlns:cv="clr-namespace:LanChecker.Converters"
         mc:Ignorable="d"
-        Title="MainWindow" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+        Title="LAN Checker" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <Window.Resources>
         <CollectionViewSource x:Key="Source1" Source="{Binding Targets}" IsLiveSortingRequested="True">
             <CollectionViewSource.SortDescriptions>
