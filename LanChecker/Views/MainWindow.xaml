@@ -19,15 +19,6 @@
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
         <cv:ColorConverter x:Key="ColorConverter" />
-        <StackPanel x:Key="ListPanel">
-            <i:Interaction.Behaviors>
-                <ei:FluidMoveBehavior AppliesTo="Children" Duration="0:0:10">
-                    <ei:FluidMoveBehavior.EaseY>
-                        <CubicEase EasingMode="EaseOut" />
-                    </ei:FluidMoveBehavior.EaseY>
-                </ei:FluidMoveBehavior>
-            </i:Interaction.Behaviors>
-        </StackPanel>
     </Window.Resources>
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
