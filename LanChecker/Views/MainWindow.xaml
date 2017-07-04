@@ -41,7 +41,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Padding="6,0,3,0" Margin="2,1,0,1" Text="{Binding IPAddress}" TextAlignment="Right" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
+                        <TextBlock Height="16" Padding="6,0,3,0" Margin="2,1,0,1" Text="{Binding IPAddress}" TextAlignment="Right" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
@@ -61,7 +61,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Padding="3,0" Margin="0,1" Text="{Binding ElapsedString}" TextAlignment="Right" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
+                        <TextBlock Height="16" Padding="3,0" Margin="0,1" Text="{Binding ElapsedString}" TextAlignment="Right" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
@@ -81,7 +81,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Padding="3,0" Margin="0,1" Text="{Binding MacAddress}" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
+                        <TextBlock Height="16" Padding="3,0" Margin="0,1" Text="{Binding MacAddress}" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
@@ -101,7 +101,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Padding="3,0,6,0" Margin="0,1,2,1" Text="{Binding Name}" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
+                        <TextBlock Height="16" Padding="3,0,6,0" Margin="0,1,2,1" Text="{Binding Name}" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
