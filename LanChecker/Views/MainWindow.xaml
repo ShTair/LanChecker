@@ -44,6 +44,7 @@
                             <TextBlock Width="25" Text="{Binding IPAddress}" TextAlignment="Right" />
                             <TextBlock Width="50" Text="{Binding ElapsedString}" TextAlignment="Right" />
                             <TextBlock Width="100" Text="{Binding MacAddress}" Margin="5,0" />
+                            <TextBlock Text="{Binding Name}" Margin="5,0" />
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

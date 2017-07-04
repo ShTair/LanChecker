@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -10,6 +11,7 @@ namespace LanChecker.ViewModels
     class TargetViewModel : INotifyPropertyChanged
     {
         private static SemaphoreSlim _sem = new SemaphoreSlim(1);
+        private Dictionary<string, string> _names;
 
         private byte[] _mac;
         private DateTime _lastReach;
@@ -63,11 +65,28 @@ namespace LanChecker.ViewModels
             {
                 if (_MacAddress == value) return;
                 _MacAddress = value;
+
+                string name;
+                if (_names.TryGetValue(value, out name)) Name = name;
+
                 PropertyChanged?.Invoke(this, _MacAddressChangedEventArgs);
             }
         }
         private string _MacAddress;
         private PropertyChangedEventArgs _MacAddressChangedEventArgs = new PropertyChangedEventArgs(nameof(MacAddress));
+
+        public string Name
+        {
+            get { return _Name; }
+            set
+            {
+                if (_Name == value) return;
+                _Name = value;
+                PropertyChanged?.Invoke(this, _NameChangedEventArgs);
+            }
+        }
+        private string _Name;
+        private PropertyChangedEventArgs _NameChangedEventArgs = new PropertyChangedEventArgs(nameof(Name));
 
         public int IPAddress { get; }
 
@@ -102,7 +121,7 @@ namespace LanChecker.ViewModels
         private bool _IsIn;
         private PropertyChangedEventArgs _IsInChangedEventArgs = new PropertyChangedEventArgs(nameof(IsIn));
 
-        public TargetViewModel(uint host)
+        public TargetViewModel(uint host, Dictionary<string, string> names)
         {
             _mac = new byte[6];
             _lastReach = DateTime.Now.AddDays(-3);
@@ -110,6 +129,8 @@ namespace LanChecker.ViewModels
 
             _host = host;
             IPAddress = (int)(host >> 24);
+
+            _names = names;
         }
 
         public void Start()

@@ -30,11 +30,13 @@ namespace LanChecker.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public MainViewModel(uint sub, uint start, int count)
+        public MainViewModel(uint sub, uint start, int count, Dictionary<string, string> names)
         {
             Status = "Ready...";
 
-            Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts(sub, start, count).Select(t => new TargetViewModel(t)));
+            if (names == null) names = new Dictionary<string, string>();
+
+            Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts(sub, start, count).Select(t => new TargetViewModel(t, names)));
             foreach (var target in Targets)
             {
                 target.StatusChanged += (status, time) =>
@@ -42,7 +44,7 @@ namespace LanChecker.ViewModels
                     lock (_counterLock)
                     {
                         _counter += status ? 1 : -1;
-                        File.AppendAllLines($"log_{DateTime.Now:yyyyMMdd}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}" });
+                        File.AppendAllLines($"log_{DateTime.Now:yyyyMMdd}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}" });
                     }
 
                     Status = $"Reach: {_counter}";
