@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 
@@ -21,7 +22,7 @@ namespace LanChecker.Views
             if (File.Exists("mac.txt"))
             {
                 var r = new Regex(@"^(.+?)\t(.+?)$");
-                names = File.ReadLines("mac.txt").Select(t => r.Match(t)).Where(t => t.Success).ToDictionary(t => t.Groups[1].Value, t => t.Groups[2].Value);
+                names = File.ReadLines("mac.txt", Encoding.Default).Select(t => r.Match(t)).Where(t => t.Success).ToDictionary(t => t.Groups[1].Value, t => t.Groups[2].Value);
             }
 
             InitializeComponent();
