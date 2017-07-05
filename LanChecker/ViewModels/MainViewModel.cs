@@ -70,7 +70,7 @@ namespace LanChecker.ViewModels
 
         private string GetFileName(TargetViewModel target)
         {
-            if (string.IsNullOrEmpty(target.Name)) return target.MacAddress.Replace(":", "-");
+            if (string.IsNullOrEmpty(target.Name)) return "Unknown";
 
             var r = new Regex(@"[\/:,;*?""<>|]");
             return r.Replace(target.Name, "_");
