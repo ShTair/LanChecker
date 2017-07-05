@@ -37,6 +37,8 @@ namespace LanChecker.ViewModels
 
             if (names == null) names = new Dictionary<string, string>();
 
+            Directory.CreateDirectory("log");
+
             Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts(sub, start, count).Select(t => new TargetViewModel(t, names)));
             foreach (var target in Targets)
             {
@@ -45,7 +47,7 @@ namespace LanChecker.ViewModels
                     lock (_counterLock)
                     {
                         _counter += status ? 1 : -1;
-                        File.AppendAllLines($"log_{GetFileName(target)}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}" });
+                        File.AppendAllLines($"log\\log_{GetFileName(target)}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}" });
                     }
 
                     Status = $"Reach: {_counter}";
