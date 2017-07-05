@@ -47,7 +47,7 @@ namespace LanChecker.ViewModels
                     lock (_counterLock)
                     {
                         _counter += status ? 1 : -1;
-                        File.AppendAllLines($"log\\log_{GetFileName(target)}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}" });
+                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}" });
                     }
 
                     Status = $"Reach: {_counter}";
@@ -68,14 +68,6 @@ namespace LanChecker.ViewModels
             {
                 yield return v + ((start + i) << 24);
             }
-        }
-
-        private string GetFileName(TargetViewModel target)
-        {
-            if (string.IsNullOrEmpty(target.Name)) return "Unknown";
-
-            var r = new Regex(@"[\/:,;*?""<>|]");
-            return r.Replace(target.Name, "_");
         }
     }
 }

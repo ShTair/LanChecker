@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,6 +11,7 @@ namespace LanChecker.ViewModels
 {
     class TargetViewModel : INotifyPropertyChanged
     {
+        private static Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
         private static SemaphoreSlim _sem = new SemaphoreSlim(1);
         private Dictionary<string, string> _names;
 
@@ -82,11 +84,25 @@ namespace LanChecker.ViewModels
             {
                 if (_Name == value) return;
                 _Name = value;
+                FileName = string.IsNullOrEmpty(value) ? "Unknown" : _fileNameRegex.Replace(value, "_");
                 PropertyChanged?.Invoke(this, _NameChangedEventArgs);
             }
         }
         private string _Name;
         private PropertyChangedEventArgs _NameChangedEventArgs = new PropertyChangedEventArgs(nameof(Name));
+
+        public string FileName
+        {
+            get { return _FileName; }
+            set
+            {
+                if (_FileName == value) return;
+                _FileName = value;
+                PropertyChanged?.Invoke(this, _FileNameChangedEventArgs);
+            }
+        }
+        private string _FileName;
+        private PropertyChangedEventArgs _FileNameChangedEventArgs = new PropertyChangedEventArgs(nameof(FileName));
 
         public int IPAddress { get; }
 
