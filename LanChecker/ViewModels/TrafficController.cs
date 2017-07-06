@@ -54,17 +54,22 @@ namespace LanChecker.ViewModels
                 }
 
                 Queue<TaskCompletionSource<IDisposable>> q = null;
-                for (int i = 0; i < 3; i++)
+
+                q = _qs[p];
+                if (q.Count == 0)
                 {
-                    var temp = _qs[(p + i) % 3];
-                    if (temp.Count != 0)
+                    for (int i = 0; i < 3; i++)
                     {
-                        q = temp;
-                        break;
+                        var temp = _qs[i];
+                        if (temp.Count != 0)
+                        {
+                            q = temp;
+                            break;
+                        }
                     }
                 }
 
-                if (q == null)
+                if (q.Count == 0)
                 {
                     _isRunning = false;
                     return;

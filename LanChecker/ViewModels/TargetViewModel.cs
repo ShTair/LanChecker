@@ -198,7 +198,6 @@ namespace LanChecker.ViewModels
         public Task Stop()
         {
             _cts.Cancel();
-            Console.WriteLine($"Stop {_host >> 24}");
             return _run;
         }
 
@@ -211,7 +210,7 @@ namespace LanChecker.ViewModels
             {
                 using (await _tc.WaitAsync(priority))
                 {
-                    Console.WriteLine($"Start {_host >> 24} {priority} {old}");
+                    Console.WriteLine($"Start {priority} {_host >> 24} {old}");
 
                     if (_cts.IsCancellationRequested) break;
 
