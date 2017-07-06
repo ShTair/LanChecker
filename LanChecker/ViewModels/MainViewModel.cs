@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace LanChecker.ViewModels
 {
@@ -35,6 +36,9 @@ namespace LanChecker.ViewModels
         public MainViewModel(uint sub, uint start, int count, Dictionary<string, DeviceInfo> names)
         {
             Status = "Ready...";
+            Targets = new ObservableCollection<TargetViewModel>();
+
+            var d = Dispatcher.CurrentDispatcher;
 
             if (names == null) names = new Dictionary<string, DeviceInfo>();
 
@@ -45,8 +49,6 @@ namespace LanChecker.ViewModels
                 var isInDhcp = t >= start && t < (start + count);
                 return new TargetViewModel(ConvertToUint(sub, (uint)t), isInDhcp, names);
             }).ToList();
-
-            Targets = new ObservableCollection<TargetViewModel>(_allTargets.Where(t => t.IsInDhcp));
 
             foreach (var target in _allTargets)
             {
@@ -60,6 +62,16 @@ namespace LanChecker.ViewModels
 
                     Status = $"Reach: {_counter}";
                 };
+
+                target.IsEnabledChanged += isEnabled =>
+                {
+                    d.Invoke(() =>
+                    {
+                        if (isEnabled) Targets.Add(target);
+                        else Targets.Remove(target);
+                    });
+                };
+
                 target.Start();
             }
         }

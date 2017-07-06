@@ -26,6 +26,8 @@ namespace LanChecker.ViewModels
 
         public event Action<bool, DateTime> StatusChanged;
 
+        public event Action<bool> IsEnabledChanged;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public TimeSpan Elapsed
@@ -159,6 +161,20 @@ namespace LanChecker.ViewModels
         private bool _IsInDhcp;
         private PropertyChangedEventArgs _IsInDhcpChangedEventArgs = new PropertyChangedEventArgs(nameof(IsInDhcp));
 
+        public bool IsEnabled
+        {
+            get { return _IsEnabled; }
+            set
+            {
+                if (_IsEnabled == value) return;
+                _IsEnabled = value;
+                IsEnabledChanged?.Invoke(value);
+                PropertyChanged?.Invoke(this, _IsEnabledChangedEventArgs);
+            }
+        }
+        private bool _IsEnabled;
+        private PropertyChangedEventArgs _IsEnabledChangedEventArgs = new PropertyChangedEventArgs(nameof(IsEnabled));
+
         public TargetViewModel(uint host, bool isInDhcp, Dictionary<string, DeviceInfo> names)
         {
             _mac = new byte[6];
@@ -189,13 +205,13 @@ namespace LanChecker.ViewModels
         private async Task Run()
         {
             bool old = false;
+            int priority = IsInDhcp ? 1 : 2;
 
             while (true)
             {
-                var p = old ? 0 : IsInDhcp ? 1 : 2;
-                using (await _tc.WaitAsync(p))
+                using (await _tc.WaitAsync(priority))
                 {
-                    Console.WriteLine($"Start {_host >> 24} {p} {old}");
+                    Console.WriteLine($"Start {_host >> 24} {priority} {old}");
 
                     if (_cts.IsCancellationRequested) break;
 
@@ -218,6 +234,9 @@ namespace LanChecker.ViewModels
                     var e = now - _lastReach;
                     Elapsed = e.TotalDays < 3 ? e : TimeSpan.FromDays(3);
                 }
+
+                priority = old ? 0 : (IsInDhcp || Elapsed < TimeSpan.FromDays(3)) ? 1 : 2;
+                IsEnabled = priority != 2;
 
                 try { await Task.Delay(old ? 20000 : IsInDhcp ? 60000 : 60000 * 60, _cts.Token); }
                 catch { break; }
