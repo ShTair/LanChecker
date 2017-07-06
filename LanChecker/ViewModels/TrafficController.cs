@@ -46,22 +46,11 @@ namespace LanChecker.ViewModels
                 Count -= 1;
 
                 _counter++;
-                if (_counter > 5) _counter = 0;
-
-                int p;
-                switch (_counter)
-                {
-                    case 0:
-                    case 1: p = 0; break;
-                    case 2:
-                    case 3:
-                    case 4: p = 1; break;
-                    default: p = 2; break;
-                }
+                if (_counter >= 3) _counter = 0;
 
                 Queue<TaskCompletionSource<IDisposable>> q = null;
 
-                q = _qs[p];
+                q = _qs[_counter];
                 if (q.Count == 0)
                 {
                     for (int i = 0; i < 3; i++)
