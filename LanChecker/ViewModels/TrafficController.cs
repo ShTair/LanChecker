@@ -19,52 +19,58 @@ namespace LanChecker.ViewModels
 
         public Task<IDisposable> WaitAsync(int p)
         {
-            if (_isRunning)
+            lock (_qs)
             {
-                var tcs = new TaskCompletionSource<IDisposable>();
-                _qs[p].Enqueue(tcs);
-                return tcs.Task;
-            }
-            else
-            {
-                _isRunning = true;
-                return Task.FromResult((IDisposable)new _Releaser(this));
+                if (_isRunning)
+                {
+                    var tcs = new TaskCompletionSource<IDisposable>();
+                    _qs[p].Enqueue(tcs);
+                    return tcs.Task;
+                }
+                else
+                {
+                    _isRunning = true;
+                    return Task.FromResult((IDisposable)new _Releaser(this));
+                }
             }
         }
 
         public void Release()
         {
-            _counter++;
-            if (_counter > 5) _counter = 0;
-
-            int p;
-            switch (_counter)
+            lock (_qs)
             {
-                case 0: p = 0; break;
-                case 1:
-                case 2: p = 1; break;
-                default: p = 2; break;
-            }
+                _counter++;
+                if (_counter > 5) _counter = 0;
 
-            Queue<TaskCompletionSource<IDisposable>> q = null;
-            for (int i = 0; i < 3; i++)
-            {
-                var temp = _qs[(p + i) % 3];
-                if (temp.Count != 0)
+                int p;
+                switch (_counter)
                 {
-                    q = temp;
-                    break;
+                    case 0: p = 0; break;
+                    case 1:
+                    case 2: p = 1; break;
+                    default: p = 2; break;
                 }
-            }
 
-            if (q == null)
-            {
-                _isRunning = false;
-                return;
-            }
+                Queue<TaskCompletionSource<IDisposable>> q = null;
+                for (int i = 0; i < 3; i++)
+                {
+                    var temp = _qs[(p + i) % 3];
+                    if (temp.Count != 0)
+                    {
+                        q = temp;
+                        break;
+                    }
+                }
 
-            var tcs = q.Dequeue();
-            tcs.TrySetResult(new _Releaser(this));
+                if (q == null)
+                {
+                    _isRunning = false;
+                    return;
+                }
+
+                var tcs = q.Dequeue();
+                tcs.TrySetResult(new _Releaser(this));
+            }
         }
 
         private class _Releaser : IDisposable
