@@ -14,6 +14,7 @@ namespace LanChecker.ViewModels
         private int _counter;
         private object _counterLock = new object();
 
+        private List<TargetViewModel> _allTargets;
         public ObservableCollection<TargetViewModel> Targets { get; }
 
         public string Status
@@ -39,15 +40,15 @@ namespace LanChecker.ViewModels
 
             Directory.CreateDirectory("log");
 
-            var targets = Enumerable.Range(1, 254).Select(t =>
+            _allTargets = Enumerable.Range(1, 254).Select(t =>
             {
                 var isInDhcp = t >= start && t < (start + count);
                 return new TargetViewModel(ConvertToUint(sub, (uint)t), isInDhcp, names);
             }).ToList();
 
-            Targets = new ObservableCollection<TargetViewModel>(targets.Where(t => t.IsInDhcp));
+            Targets = new ObservableCollection<TargetViewModel>(_allTargets.Where(t => t.IsInDhcp));
 
-            foreach (var target in targets)
+            foreach (var target in _allTargets)
             {
                 target.StatusChanged += (status, time) =>
                 {
@@ -65,7 +66,7 @@ namespace LanChecker.ViewModels
 
         public void Dispose()
         {
-            Task.WhenAll(Targets.Select(t => t.Stop())).Wait(30000);
+            Task.WhenAll(_allTargets.Select(t => t.Stop())).Wait(30000);
         }
 
         private uint ConvertToUint(uint c, uint d) => 192 + (168 << 8) + (c << 16) + (d << 24);

@@ -45,9 +45,11 @@ namespace LanChecker.ViewModels
                 int p;
                 switch (_counter)
                 {
-                    case 0: p = 0; break;
-                    case 1:
-                    case 2: p = 1; break;
+                    case 0:
+                    case 1: p = 0; break;
+                    case 2:
+                    case 3:
+                    case 4: p = 1; break;
                     default: p = 2; break;
                 }
 
@@ -69,7 +71,7 @@ namespace LanChecker.ViewModels
                 }
 
                 var tcs = q.Dequeue();
-                tcs.TrySetResult(new _Releaser(this));
+                Task.Run(() => tcs.TrySetResult(new _Releaser(this)));
             }
         }
 

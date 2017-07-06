@@ -13,7 +13,7 @@ namespace LanChecker.ViewModels
     class TargetViewModel : INotifyPropertyChanged
     {
         private static Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
-        private static SemaphoreSlim _sem = new SemaphoreSlim(1);
+        private static TrafficController _tc = new TrafficController();
         private Dictionary<string, DeviceInfo> _names;
 
         private byte[] _mac;
@@ -182,6 +182,7 @@ namespace LanChecker.ViewModels
         public Task Stop()
         {
             _cts.Cancel();
+            Console.WriteLine($"Stop {_host >> 24}");
             return _run;
         }
 
@@ -191,15 +192,18 @@ namespace LanChecker.ViewModels
 
             while (true)
             {
-                try
+                var p = old ? 0 : IsInDhcp ? 1 : 2;
+                using (await _tc.WaitAsync(p))
                 {
-                    await _sem.WaitAsync();
+                    Console.WriteLine($"Start {_host >> 24} {p} {old}");
+
                     if (_cts.IsCancellationRequested) break;
 
                     var result = SendArp();
 
-                    if (result != old)
+                    if (old != result)
                     {
+                        old = result;
                         Console.WriteLine($"{_host >> 24} {result}");
                     }
 
@@ -214,7 +218,6 @@ namespace LanChecker.ViewModels
                     var e = now - _lastReach;
                     Elapsed = e.TotalDays < 3 ? e : TimeSpan.FromDays(3);
                 }
-                finally { _sem.Release(); }
 
                 try { await Task.Delay(old ? 20000 : IsInDhcp ? 60000 : 60000 * 60, _cts.Token); }
                 catch { break; }
