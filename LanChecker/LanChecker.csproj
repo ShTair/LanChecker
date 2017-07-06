@@ -67,7 +67,6 @@
     <Compile Include="Converters\ColorConverter.cs" />
     <Compile Include="Models\DeviceInfo.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\PriorityQueue.cs" />
     <Compile Include="ViewModels\TargetViewModel.cs" />
     <Compile Include="ViewModels\TrafficController.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">
