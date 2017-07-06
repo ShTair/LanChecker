@@ -39,8 +39,15 @@ namespace LanChecker.ViewModels
 
             Directory.CreateDirectory("log");
 
-            Targets = new ObservableCollection<TargetViewModel>(GetTargetHosts(sub, start, count).Select(t => new TargetViewModel(t, names)));
-            foreach (var target in Targets)
+            var targets = Enumerable.Range(1, 254).Select(t =>
+            {
+                var isInDhcp = t >= start && t < (start + count);
+                return new TargetViewModel(ConvertToUint(sub, (uint)t), isInDhcp, names);
+            }).ToList();
+
+            Targets = new ObservableCollection<TargetViewModel>(targets.Where(t => t.IsInDhcp));
+
+            foreach (var target in targets)
             {
                 target.StatusChanged += (status, time) =>
                 {
@@ -61,13 +68,6 @@ namespace LanChecker.ViewModels
             Task.WhenAll(Targets.Select(t => t.Stop())).Wait(30000);
         }
 
-        private IEnumerable<uint> GetTargetHosts(uint sub, uint start, int count)
-        {
-            uint v = 192 + (168 << 8) + (sub << 16);
-            for (uint i = 0; i < count; i++)
-            {
-                yield return v + ((start + i) << 24);
-            }
-        }
+        private uint ConvertToUint(uint c, uint d) => 192 + (168 << 8) + (c << 16) + (d << 24);
     }
 }

@@ -146,7 +146,20 @@ namespace LanChecker.ViewModels
         private bool _IsIn;
         private PropertyChangedEventArgs _IsInChangedEventArgs = new PropertyChangedEventArgs(nameof(IsIn));
 
-        public TargetViewModel(uint host, Dictionary<string, DeviceInfo> names)
+        public bool IsInDhcp
+        {
+            get { return _IsInDhcp; }
+            set
+            {
+                if (_IsInDhcp == value) return;
+                _IsInDhcp = value;
+                PropertyChanged?.Invoke(this, _IsInDhcpChangedEventArgs);
+            }
+        }
+        private bool _IsInDhcp;
+        private PropertyChangedEventArgs _IsInDhcpChangedEventArgs = new PropertyChangedEventArgs(nameof(IsInDhcp));
+
+        public TargetViewModel(uint host, bool isInDhcp, Dictionary<string, DeviceInfo> names)
         {
             _mac = new byte[6];
             _lastReach = DateTime.Now.AddDays(-3);
@@ -154,6 +167,8 @@ namespace LanChecker.ViewModels
 
             _host = host;
             IPAddress = (int)(host >> 24);
+
+            IsInDhcp = isInDhcp;
 
             _names = names;
         }
@@ -201,7 +216,7 @@ namespace LanChecker.ViewModels
                 }
                 finally { _sem.Release(); }
 
-                try { await Task.Delay(old ? 20000 : 60000, _cts.Token); }
+                try { await Task.Delay(old ? 20000 : IsInDhcp ? 60000 : 60000 * 60, _cts.Token); }
                 catch { break; }
             }
         }
