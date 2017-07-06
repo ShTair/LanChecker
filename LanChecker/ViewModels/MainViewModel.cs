@@ -31,6 +31,19 @@ namespace LanChecker.ViewModels
         private string _Status;
         private PropertyChangedEventArgs _StatusChangedEventArgs = new PropertyChangedEventArgs(nameof(Status));
 
+        public int QueueCount
+        {
+            get { return _QueueCount; }
+            set
+            {
+                if (_QueueCount == value) return;
+                _QueueCount = value;
+                PropertyChanged?.Invoke(this, _QueueCountChangedEventArgs);
+            }
+        }
+        private int _QueueCount;
+        private PropertyChangedEventArgs _QueueCountChangedEventArgs = new PropertyChangedEventArgs(nameof(QueueCount));
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public MainViewModel(uint sub, uint start, int count, Dictionary<string, DeviceInfo> names)
@@ -49,6 +62,8 @@ namespace LanChecker.ViewModels
                 var isInDhcp = t >= start && t < (start + count);
                 return new TargetViewModel(ConvertToUint(sub, (uint)t), isInDhcp, names);
             }).ToList();
+
+            TargetViewModel.QueueCountChanged += qc => QueueCount = qc;
 
             foreach (var target in _allTargets)
             {

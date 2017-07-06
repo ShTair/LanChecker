@@ -12,6 +12,8 @@ namespace LanChecker.ViewModels
 
         private bool _isRunning;
 
+        public int Count { get; private set; }
+
         public TrafficController()
         {
             _qs = Enumerable.Range(0, 3).Select(t => new Queue<TaskCompletionSource<IDisposable>>()).ToArray();
@@ -21,6 +23,8 @@ namespace LanChecker.ViewModels
         {
             lock (_qs)
             {
+                Count += 1;
+
                 if (_isRunning)
                 {
                     var tcs = new TaskCompletionSource<IDisposable>();
@@ -39,6 +43,8 @@ namespace LanChecker.ViewModels
         {
             lock (_qs)
             {
+                Count -= 1;
+
                 _counter++;
                 if (_counter > 5) _counter = 0;
 

@@ -14,6 +14,9 @@ namespace LanChecker.ViewModels
     {
         private static Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
         private static TrafficController _tc = new TrafficController();
+
+        public static event Action<int> QueueCountChanged;
+
         private Dictionary<string, DeviceInfo> _names;
 
         private byte[] _mac;
@@ -210,6 +213,8 @@ namespace LanChecker.ViewModels
             {
                 using (await _tc.WaitAsync(priority))
                 {
+                    QueueCountChanged?.Invoke(_tc.Count);
+
                     Console.WriteLine($"Start {priority} {_host >> 24} {old}");
 
                     if (_cts.IsCancellationRequested) break;
@@ -233,6 +238,7 @@ namespace LanChecker.ViewModels
                     var e = now - _lastReach;
                     Elapsed = e.TotalDays < 3 ? e : TimeSpan.FromDays(3);
                 }
+                QueueCountChanged?.Invoke(_tc.Count);
 
                 priority = old ? 0 : (IsInDhcp || Elapsed < TimeSpan.FromDays(3)) ? 1 : 2;
                 IsEnabled = priority != 2;
