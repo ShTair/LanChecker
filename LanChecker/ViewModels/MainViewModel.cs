@@ -12,24 +12,23 @@ namespace LanChecker.ViewModels
 {
     class MainViewModel : IDisposable, INotifyPropertyChanged
     {
-        private int _counter;
         private object _counterLock = new object();
 
         private List<TargetViewModel> _allTargets;
         public ObservableCollection<TargetViewModel> Targets { get; }
 
-        public string Status
+        public int ReachCount
         {
-            get { return _Status; }
+            get { return _ReachCount; }
             set
             {
-                if (_Status == value) return;
-                _Status = value;
-                PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
+                if (_ReachCount == value) return;
+                _ReachCount = value;
+                PropertyChanged?.Invoke(this, _ReachCountChangedEventArgs);
             }
         }
-        private string _Status;
-        private PropertyChangedEventArgs _StatusChangedEventArgs = new PropertyChangedEventArgs(nameof(Status));
+        private int _ReachCount;
+        private PropertyChangedEventArgs _ReachCountChangedEventArgs = new PropertyChangedEventArgs(nameof(ReachCount));
 
         public int QueueCount
         {
@@ -48,7 +47,6 @@ namespace LanChecker.ViewModels
 
         public MainViewModel(uint sub, uint start, int count, Dictionary<string, DeviceInfo> names)
         {
-            Status = "Ready...";
             Targets = new ObservableCollection<TargetViewModel>();
 
             var d = Dispatcher.CurrentDispatcher;
@@ -71,11 +69,9 @@ namespace LanChecker.ViewModels
                 {
                     lock (_counterLock)
                     {
-                        _counter += status ? 1 : -1;
+                        ReachCount += status ? 1 : -1;
                         File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
                     }
-
-                    Status = $"Reach: {_counter}";
                 };
 
                 target.IsEnabledChanged += isEnabled =>

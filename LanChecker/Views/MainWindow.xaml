@@ -22,10 +22,14 @@
     </Window.Resources>
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
-            <StackPanel Orientation="Horizontal">
-                <StatusBarItem Content="{Binding Status}" />
-                <StatusBarItem Content="{Binding QueueCount}" />
-            </StackPanel>
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Reached: " />
+                    <TextBlock Text="{Binding ReachCount}" />
+                    <TextBlock Text=", Waiting: " />
+                    <TextBlock Text="{Binding QueueCount}" />
+                </StackPanel>
+            </StatusBarItem>
         </StatusBar>
         <Grid Margin="2,1">
             <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
