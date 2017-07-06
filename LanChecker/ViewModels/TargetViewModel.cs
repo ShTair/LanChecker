@@ -83,7 +83,7 @@ namespace LanChecker.ViewModels
                 else
                 {
                     Name = null;
-                    FileName = null;
+                    FileName = "Unknown";
                 }
 
                 PropertyChanged?.Invoke(this, _MacAddressChangedEventArgs);
