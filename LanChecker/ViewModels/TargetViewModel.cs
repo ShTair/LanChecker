@@ -13,7 +13,10 @@ namespace LanChecker.ViewModels
     class TargetViewModel : INotifyPropertyChanged
     {
         private static Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
-        private static SemaphoreSlim _sem = new SemaphoreSlim(1);
+        private static TrafficController _tc = new TrafficController();
+
+        public static event Action<int> QueueCountChanged;
+
         private Dictionary<string, DeviceInfo> _names;
 
         private byte[] _mac;
@@ -25,6 +28,8 @@ namespace LanChecker.ViewModels
         private uint _host;
 
         public event Action<bool, DateTime> StatusChanged;
+
+        public event Action<bool> IsEnabledChanged;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -146,7 +151,34 @@ namespace LanChecker.ViewModels
         private bool _IsIn;
         private PropertyChangedEventArgs _IsInChangedEventArgs = new PropertyChangedEventArgs(nameof(IsIn));
 
-        public TargetViewModel(uint host, Dictionary<string, DeviceInfo> names)
+        public bool IsInDhcp
+        {
+            get { return _IsInDhcp; }
+            set
+            {
+                if (_IsInDhcp == value) return;
+                _IsInDhcp = value;
+                PropertyChanged?.Invoke(this, _IsInDhcpChangedEventArgs);
+            }
+        }
+        private bool _IsInDhcp;
+        private PropertyChangedEventArgs _IsInDhcpChangedEventArgs = new PropertyChangedEventArgs(nameof(IsInDhcp));
+
+        public bool IsEnabled
+        {
+            get { return _IsEnabled; }
+            set
+            {
+                if (_IsEnabled == value) return;
+                _IsEnabled = value;
+                IsEnabledChanged?.Invoke(value);
+                PropertyChanged?.Invoke(this, _IsEnabledChangedEventArgs);
+            }
+        }
+        private bool _IsEnabled;
+        private PropertyChangedEventArgs _IsEnabledChangedEventArgs = new PropertyChangedEventArgs(nameof(IsEnabled));
+
+        public TargetViewModel(uint host, bool isInDhcp, Dictionary<string, DeviceInfo> names)
         {
             _mac = new byte[6];
             _lastReach = DateTime.Now.AddDays(-3);
@@ -154,6 +186,8 @@ namespace LanChecker.ViewModels
 
             _host = host;
             IPAddress = (int)(host >> 24);
+
+            IsInDhcp = isInDhcp;
 
             _names = names;
         }
@@ -173,18 +207,23 @@ namespace LanChecker.ViewModels
         private async Task Run()
         {
             bool old = false;
+            int priority = IsInDhcp ? 1 : 2;
 
             while (true)
             {
-                try
+                using (await _tc.WaitAsync(priority))
                 {
-                    await _sem.WaitAsync();
+                    QueueCountChanged?.Invoke(_tc.Count);
+
+                    Console.WriteLine($"Start {priority} {_host >> 24} {old}");
+
                     if (_cts.IsCancellationRequested) break;
 
                     var result = SendArp();
 
-                    if (result != old)
+                    if (old != result)
                     {
+                        old = result;
                         Console.WriteLine($"{_host >> 24} {result}");
                     }
 
@@ -199,9 +238,12 @@ namespace LanChecker.ViewModels
                     var e = now - _lastReach;
                     Elapsed = e.TotalDays < 3 ? e : TimeSpan.FromDays(3);
                 }
-                finally { _sem.Release(); }
+                QueueCountChanged?.Invoke(_tc.Count);
 
-                try { await Task.Delay(old ? 20000 : 60000, _cts.Token); }
+                priority = old ? 0 : (IsInDhcp || Elapsed < TimeSpan.FromDays(3)) ? 1 : 2;
+                IsEnabled = priority != 2;
+
+                try { await Task.Delay(old ? 20000 : IsInDhcp ? 60000 : 60000 * 60, _cts.Token); }
                 catch { break; }
             }
         }
