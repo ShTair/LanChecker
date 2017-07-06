@@ -1,10 +1,10 @@
-﻿using System;
+﻿using LanChecker.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace LanChecker.ViewModels
@@ -31,11 +31,11 @@ namespace LanChecker.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public MainViewModel(uint sub, uint start, int count, Dictionary<string, string> names)
+        public MainViewModel(uint sub, uint start, int count, Dictionary<string, DeviceInfo> names)
         {
             Status = "Ready...";
 
-            if (names == null) names = new Dictionary<string, string>();
+            if (names == null) names = new Dictionary<string, DeviceInfo>();
 
             Directory.CreateDirectory("log");
 
@@ -47,7 +47,7 @@ namespace LanChecker.ViewModels
                     lock (_counterLock)
                     {
                         _counter += status ? 1 : -1;
-                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}" });
+                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
                     }
 
                     Status = $"Reach: {_counter}";

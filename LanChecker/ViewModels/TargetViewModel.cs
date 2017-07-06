@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LanChecker.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace LanChecker.ViewModels
     {
         private static Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
         private static SemaphoreSlim _sem = new SemaphoreSlim(1);
-        private Dictionary<string, string> _names;
+        private Dictionary<string, DeviceInfo> _names;
 
         private byte[] _mac;
         private DateTime _lastReach;
@@ -68,8 +69,17 @@ namespace LanChecker.ViewModels
                 if (_MacAddress == value) return;
                 _MacAddress = value;
 
-                string name;
-                if (_names.TryGetValue(value, out name)) Name = name;
+                DeviceInfo name;
+                if (_names.TryGetValue(value, out name))
+                {
+                    Name = name.Name;
+                    FileName = name.FileName;
+                }
+                else
+                {
+                    Name = null;
+                    FileName = null;
+                }
 
                 PropertyChanged?.Invoke(this, _MacAddressChangedEventArgs);
             }
@@ -84,7 +94,6 @@ namespace LanChecker.ViewModels
             {
                 if (_Name == value) return;
                 _Name = value;
-                FileName = string.IsNullOrEmpty(value) ? "Unknown" : _fileNameRegex.Replace(value, "_");
                 PropertyChanged?.Invoke(this, _NameChangedEventArgs);
             }
         }
@@ -137,7 +146,7 @@ namespace LanChecker.ViewModels
         private bool _IsIn;
         private PropertyChangedEventArgs _IsInChangedEventArgs = new PropertyChangedEventArgs(nameof(IsIn));
 
-        public TargetViewModel(uint host, Dictionary<string, string> names)
+        public TargetViewModel(uint host, Dictionary<string, DeviceInfo> names)
         {
             _mac = new byte[6];
             _lastReach = DateTime.Now.AddDays(-3);

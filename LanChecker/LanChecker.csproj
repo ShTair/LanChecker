@@ -65,6 +65,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Converters\ColorConverter.cs" />
+    <Compile Include="Models\DeviceInfo.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\PriorityQueue.cs" />
     <Compile Include="ViewModels\TargetViewModel.cs" />
