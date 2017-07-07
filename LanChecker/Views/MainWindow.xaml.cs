@@ -29,7 +29,7 @@ namespace LanChecker.Views
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            ((MainViewModel)DataContext).Dispose();
+            ((MainViewModel)DataContext).Stop();
         }
     }
 }

@@ -10,7 +10,7 @@ using System.Windows.Threading;
 
 namespace LanChecker.ViewModels
 {
-    class MainViewModel : IDisposable, INotifyPropertyChanged
+    class MainViewModel : INotifyPropertyChanged
     {
         private Dispatcher _d;
 
@@ -20,6 +20,9 @@ namespace LanChecker.ViewModels
         private Dictionary<int, TargetViewModel> _inTargets;
 
         private List<TargetViewModel> _allTargets;
+
+        public bool IsStoped { get; private set; }
+        private Task _running;
 
         #region properties
 
@@ -89,14 +92,14 @@ namespace LanChecker.ViewModels
                 };
             }
 
-            Task.Run(RunChecking);
+            _running = Task.Run(RunChecking);
         }
 
         private async Task RunChecking()
         {
             try
             {
-                while (true)
+                while (!IsStoped)
                 {
                     var p = await _mlq.Dequeue();
                     p();
@@ -154,8 +157,10 @@ namespace LanChecker.ViewModels
             });
         }
 
-        public void Dispose()
+        public void Stop()
         {
+            IsStoped = true;
+            _running.Wait();
         }
 
         private uint ConvertToUint(uint c, uint d) => 192 + (168 << 8) + (c << 16) + (d << 24);
