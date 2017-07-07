@@ -211,6 +211,12 @@ namespace LanChecker.ViewModels
             Elapsed = now - _lastReach;
         }
 
+        public void Find()
+        {
+            _lastReach = DateTime.Now - _ts2;
+            Elapsed = _ts2;
+        }
+
         private bool SendArp()
         {
             var macLen = _mac.Length;

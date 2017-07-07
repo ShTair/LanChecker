@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
@@ -19,7 +20,7 @@ namespace LanChecker.ViewModels
         private MultiLaneQueue<Action> _mlq;
         private Dictionary<int, TargetViewModel> _inTargets;
 
-        private List<TargetViewModel> _allTargets;
+        private Dictionary<int, TargetViewModel> _allTargets;
 
         public bool IsStoped { get; private set; }
         private Task _running;
@@ -78,9 +79,9 @@ namespace LanChecker.ViewModels
                 var target = new TargetViewModel(ConvertToUint(sub, (uint)t), isInDhcp, names);
                 _mlq.Enqueue(() => CheckAllProcess(target), 3);
                 return target;
-            }).ToList();
+            }).ToDictionary(t => t.IPAddress);
 
-            foreach (var target in _allTargets)
+            foreach (var target in _allTargets.Values)
             {
                 target.StatusChanged += (status, time) =>
                 {
@@ -93,6 +94,7 @@ namespace LanChecker.ViewModels
             }
 
             _running = Task.Run(RunChecking);
+            _ = ReceivingDhcp();
         }
 
         private async Task RunChecking()
@@ -155,6 +157,35 @@ namespace LanChecker.ViewModels
             {
                 _mlq.Enqueue(() => CheckAllProcess(target), 3);
             });
+        }
+
+        private async Task ReceivingDhcp()
+        {
+            var udp = new UdpClient(68);
+            while (true)
+            {
+                var result = await udp.ReceiveAsync();
+                var ip = result.Buffer[19];
+                Console.WriteLine($"DHCP {ip}");
+
+                if (ip != 0)
+                {
+                    lock (_inTargets)
+                    {
+                        if (!_inTargets.ContainsKey(ip))
+                        {
+                            TargetViewModel target;
+                            if (_allTargets.TryGetValue(ip, out target))
+                            {
+                                target.Find();
+                                _inTargets.Add(target.IPAddress, target);
+                                _d.Invoke(() => Targets.Add(target));
+                                _mlq.Enqueue(() => CheckInProcess(target), 1);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public void Stop()
