@@ -31,6 +31,10 @@ namespace LanChecker.ViewModels
 
         public event Action<bool> IsEnabledChanged;
 
+        private static readonly TimeSpan _ts1 = TimeSpan.Zero;
+        private static readonly TimeSpan _ts2 = TimeSpan.FromHours(1);
+        private static readonly TimeSpan _ts3 = TimeSpan.FromDays(3);
+
         #region properties
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -40,12 +44,15 @@ namespace LanChecker.ViewModels
             get { return _Elapsed; }
             set
             {
+                if (value > _ts3) value = _ts3;
+
                 if (_Elapsed == value) return;
                 _Elapsed = value;
 
-                if (value == TimeSpan.Zero) Status = 0;
-                else if (value < TimeSpan.FromHours(1)) Status = 1;
-                else Status = 2;
+                if (value == _ts1) Status = 0;
+                else if (value < _ts2) Status = 1;
+                else if (value < _ts3) Status = 2;
+                else Status = 3;
 
                 ElapsedString = value.ToString(@"d\.hh\:mm");
 
@@ -250,6 +257,21 @@ namespace LanChecker.ViewModels
                 try { await Task.Delay(old ? 20000 : IsInDhcp ? 60000 : 60000 * 60, _cts.Token); }
                 catch { break; }
             }
+        }
+
+        public void Check()
+        {
+            var result = SendArp();
+
+            var now = DateTime.Now;
+
+            if (result)
+            {
+                MacAddress = string.Join(":", _mac.Select(t => t.ToString("X2")));
+                _lastReach = now;
+            }
+
+            Elapsed = now - _lastReach;
         }
 
         private bool SendArp()
