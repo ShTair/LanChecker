@@ -15,7 +15,9 @@ namespace LanChecker.ViewModels
         private object _counterLock = new object();
 
         private List<TargetViewModel> _allTargets;
-        private Dictionary<string, TargetViewModel> _inTargets;
+        private Dictionary<int, TargetViewModel> _inTargets;
+
+        private MultiLaneQueue<Action> _mlq;
 
         #region properties
 
@@ -91,6 +93,29 @@ namespace LanChecker.ViewModels
 
                 target.Start();
             }
+        }
+
+        private void CheckAllProcess(TargetViewModel target)
+        {
+            target.Check();
+
+            if (target.Status != 3)
+            {
+                lock (_inTargets)
+                {
+                    if (!_inTargets.ContainsKey(target.IPAddress))
+                    {
+                        _inTargets.Add(target.IPAddress, target);
+                        Targets.Add(target);
+                    }
+                }
+            }
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromHours(1));
+                _mlq.Enqueue(() => CheckAllProcess(target), 3);
+            });
         }
 
         public void Dispose()
