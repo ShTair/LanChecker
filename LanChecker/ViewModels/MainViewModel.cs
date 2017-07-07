@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 
 namespace LanChecker.ViewModels
@@ -156,30 +157,37 @@ namespace LanChecker.ViewModels
 
         private async Task ReceivingDhcp()
         {
-            var udp = new UdpClient(68);
-            while (true)
+            try
             {
-                var result = await udp.ReceiveAsync();
-                var ip = result.Buffer[19];
-                Console.WriteLine($"DHCP {ip}");
-
-                if (ip != 0)
+                var udp = new UdpClient(68);
+                while (true)
                 {
-                    lock (_inTargets)
+                    var result = await udp.ReceiveAsync();
+                    var ip = result.Buffer[19];
+                    Console.WriteLine($"DHCP {ip}");
+
+                    if (ip != 0)
                     {
-                        if (!_inTargets.ContainsKey(ip))
+                        lock (_inTargets)
                         {
-                            TargetViewModel target;
-                            if (_allTargets.TryGetValue(ip, out target))
+                            if (!_inTargets.ContainsKey(ip))
                             {
-                                target.Find();
-                                _inTargets.Add(target.IPAddress, target);
-                                _d.Invoke(() => Targets.Add(target));
-                                _mlq.Enqueue(() => CheckInProcess(target), 1);
+                                TargetViewModel target;
+                                if (_allTargets.TryGetValue(ip, out target))
+                                {
+                                    target.Find();
+                                    _inTargets.Add(target.IPAddress, target);
+                                    _d.Invoke(() => Targets.Add(target));
+                                    _mlq.Enqueue(() => CheckInProcess(target), 1);
+                                }
                             }
                         }
                     }
                 }
+            }
+            catch (Exception exp)
+            {
+                MessageBox.Show("UDPが終了しました\r\n" + exp);
             }
         }
 
