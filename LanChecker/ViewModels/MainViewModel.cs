@@ -144,7 +144,11 @@ namespace LanChecker.ViewModels
                     {
                         _inTargets.Add(target.IPAddress, target);
                         _d.Invoke(() => Targets.Add(target));
-                        _mlq.Enqueue(() => CheckInProcess(target), 1);
+
+                        Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ =>
+                        {
+                            _mlq.Enqueue(() => CheckInProcess(target), 1);
+                        });
                     }
                 }
             }
@@ -164,7 +168,8 @@ namespace LanChecker.ViewModels
                 {
                     var result = await udp.ReceiveAsync();
                     var ip = result.Buffer[19];
-                    Console.WriteLine($"DHCP {ip}");
+                    var mac = string.Join(":", result.Buffer.Skip(28).Take(6).Select(t => t.ToString("X2")));
+                    Console.WriteLine($"DHCP {mac} {ip}");
 
                     if (ip != 0)
                     {
@@ -175,10 +180,13 @@ namespace LanChecker.ViewModels
                                 TargetViewModel target;
                                 if (_allTargets.TryGetValue(ip, out target))
                                 {
-                                    target.Find();
+                                    target.Find(mac);
                                     _inTargets.Add(target.IPAddress, target);
                                     _d.Invoke(() => Targets.Add(target));
-                                    _mlq.Enqueue(() => CheckInProcess(target), 1);
+                                    Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(_ =>
+                                    {
+                                        _mlq.Enqueue(() => CheckInProcess(target), 1);
+                                    });
                                 }
                             }
                         }
