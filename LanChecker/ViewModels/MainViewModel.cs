@@ -104,6 +104,7 @@ namespace LanChecker.ViewModels
                 while (!IsStoped)
                 {
                     var p = await _mlq.Dequeue();
+                    QueueCount = _mlq.Count;
                     p();
                 }
             }
