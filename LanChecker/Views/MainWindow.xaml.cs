@@ -24,7 +24,7 @@ namespace LanChecker.Views
             }
 
             InitializeComponent();
-            DataContext = new MainViewModel(uint.Parse(args[1]), uint.Parse(args[2]), int.Parse(args[3]), names);
+            DataContext = new MainViewModel(uint.Parse(args[1]), names);
         }
 
         private void Window_Closed(object sender, EventArgs e)

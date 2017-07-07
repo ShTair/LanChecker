@@ -18,9 +18,8 @@ namespace LanChecker.ViewModels
         private object _counterLock = new object();
 
         private MultiLaneQueue<Action> _mlq;
-        private Dictionary<int, TargetViewModel> _inTargets;
-
         private Dictionary<int, TargetViewModel> _allTargets;
+        private Dictionary<int, TargetViewModel> _inTargets;
 
         public bool IsStoped { get; private set; }
         private Task _running;
@@ -59,7 +58,7 @@ namespace LanChecker.ViewModels
 
         #endregion
 
-        public MainViewModel(uint sub, uint start, int count, Dictionary<string, DeviceInfo> names)
+        public MainViewModel(uint sub, Dictionary<string, DeviceInfo> names)
         {
             _d = Dispatcher.CurrentDispatcher;
 
@@ -75,14 +74,7 @@ namespace LanChecker.ViewModels
 
             _allTargets = Enumerable.Range(1, 254).Select(t =>
             {
-                var isInDhcp = t >= start && t < (start + count);
-                var target = new TargetViewModel(ConvertToUint(sub, (uint)t), isInDhcp, names);
-                _mlq.Enqueue(() => CheckAllProcess(target), 3);
-                return target;
-            }).ToDictionary(t => t.IPAddress);
-
-            foreach (var target in _allTargets.Values)
-            {
+                var target = new TargetViewModel(ConvertToUint(sub, (uint)t), names);
                 target.StatusChanged += (status, time) =>
                 {
                     lock (_counterLock)
@@ -91,7 +83,9 @@ namespace LanChecker.ViewModels
                         File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
                     }
                 };
-            }
+                _mlq.Enqueue(() => CheckAllProcess(target), 3);
+                return target;
+            }).ToDictionary(t => t.IPAddress);
 
             _running = Task.Run(RunChecking);
             _ = ReceivingDhcp();
