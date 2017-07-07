@@ -15,6 +15,12 @@ namespace LanChecker.ViewModels
         private object _counterLock = new object();
 
         private List<TargetViewModel> _allTargets;
+        private Dictionary<string, TargetViewModel> _inTargets;
+
+        #region properties
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public ObservableCollection<TargetViewModel> Targets { get; }
 
         public int ReachCount
@@ -43,7 +49,7 @@ namespace LanChecker.ViewModels
         private int _QueueCount;
         private PropertyChangedEventArgs _QueueCountChangedEventArgs = new PropertyChangedEventArgs(nameof(QueueCount));
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        #endregion
 
         public MainViewModel(uint sub, uint start, int count, Dictionary<string, DeviceInfo> names)
         {

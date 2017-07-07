@@ -31,6 +31,8 @@ namespace LanChecker.ViewModels
 
         public event Action<bool> IsEnabledChanged;
 
+        #region properties
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public TimeSpan Elapsed
@@ -177,6 +179,8 @@ namespace LanChecker.ViewModels
         }
         private bool _IsEnabled;
         private PropertyChangedEventArgs _IsEnabledChangedEventArgs = new PropertyChangedEventArgs(nameof(IsEnabled));
+
+        #endregion
 
         public TargetViewModel(uint host, bool isInDhcp, Dictionary<string, DeviceInfo> names)
         {
