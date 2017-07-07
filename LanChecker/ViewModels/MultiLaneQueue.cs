@@ -45,7 +45,7 @@ namespace LanChecker.ViewModels
                 if (Count > 0)
                 {
                     Count--;
-                    var ci = _nextIndex++;
+                    var ci = _nextIndex++ % _qs.Length;
 
                     if (_qs[ci].Count != 0)
                     {

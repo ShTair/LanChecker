@@ -12,12 +12,14 @@ namespace LanChecker.ViewModels
 {
     class MainViewModel : IDisposable, INotifyPropertyChanged
     {
+        private Dispatcher _d;
+
         private object _counterLock = new object();
 
-        private List<TargetViewModel> _allTargets;
+        private MultiLaneQueue<Action> _mlq;
         private Dictionary<int, TargetViewModel> _inTargets;
 
-        private MultiLaneQueue<Action> _mlq;
+        private List<TargetViewModel> _allTargets;
 
         #region properties
 
@@ -55,9 +57,13 @@ namespace LanChecker.ViewModels
 
         public MainViewModel(uint sub, uint start, int count, Dictionary<string, DeviceInfo> names)
         {
+            _d = Dispatcher.CurrentDispatcher;
+
+            _mlq = new MultiLaneQueue<Action>(4);
+            _inTargets = new Dictionary<int, TargetViewModel>();
+
             Targets = new ObservableCollection<TargetViewModel>();
 
-            var d = Dispatcher.CurrentDispatcher;
 
             if (names == null) names = new Dictionary<string, DeviceInfo>();
 
@@ -66,10 +72,10 @@ namespace LanChecker.ViewModels
             _allTargets = Enumerable.Range(1, 254).Select(t =>
             {
                 var isInDhcp = t >= start && t < (start + count);
-                return new TargetViewModel(ConvertToUint(sub, (uint)t), isInDhcp, names);
+                var target = new TargetViewModel(ConvertToUint(sub, (uint)t), isInDhcp, names);
+                _mlq.Enqueue(() => CheckAllProcess(target), 3);
+                return target;
             }).ToList();
-
-            TargetViewModel.QueueCountChanged += qc => QueueCount = qc;
 
             foreach (var target in _allTargets)
             {
@@ -81,17 +87,6 @@ namespace LanChecker.ViewModels
                         File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
                     }
                 };
-
-                target.IsEnabledChanged += isEnabled =>
-                {
-                    d.Invoke(() =>
-                    {
-                        if (isEnabled) Targets.Add(target);
-                        else Targets.Remove(target);
-                    });
-                };
-
-                target.Start();
             }
 
             Task.Run(RunChecking);
@@ -99,15 +94,23 @@ namespace LanChecker.ViewModels
 
         private async Task RunChecking()
         {
-            while (true)
+            try
             {
-                var p = await _mlq.Dequeue();
-                p();
+                while (true)
+                {
+                    var p = await _mlq.Dequeue();
+                    p();
+                }
+            }
+            catch (Exception exp)
+            {
+                Console.WriteLine(exp);
             }
         }
 
         private void CheckInProcess(TargetViewModel target)
         {
+            Console.WriteLine($"Check IN {target.IPAddress}");
             target.Check();
 
             if (target.Status == 3)
@@ -115,21 +118,21 @@ namespace LanChecker.ViewModels
                 lock (_inTargets)
                 {
                     _inTargets.Remove(target.IPAddress);
-                    Targets.Remove(target);
+                    _d.Invoke(() => Targets.Remove(target));
                 }
             }
             else
             {
-                Task.Run(async () =>
+                Task.Delay(TimeSpan.FromSeconds(target.Status == 2 ? 60 : 20)).ContinueWith(_ =>
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(target.Status == 2 ? 60 : 20));
-                    _mlq.Enqueue(() => CheckAllProcess(target), target.Status == 0 ? 1 : 2);
+                    _mlq.Enqueue(() => CheckInProcess(target), target.Status == 0 ? 1 : 2);
                 });
             }
         }
 
         private void CheckAllProcess(TargetViewModel target)
         {
+            Console.WriteLine($"Check OT {target.IPAddress}");
             target.Check();
 
             if (target.Status != 3)
@@ -139,22 +142,20 @@ namespace LanChecker.ViewModels
                     if (!_inTargets.ContainsKey(target.IPAddress))
                     {
                         _inTargets.Add(target.IPAddress, target);
-                        Targets.Add(target);
-                        _mlq.Enqueue(() => CheckAllProcess(target), 1);
+                        _d.Invoke(() => Targets.Add(target));
+                        _mlq.Enqueue(() => CheckInProcess(target), 1);
                     }
                 }
             }
 
-            Task.Run(async () =>
+            Task.Delay(TimeSpan.FromHours(1)).ContinueWith(_ =>
             {
-                await Task.Delay(TimeSpan.FromHours(1));
                 _mlq.Enqueue(() => CheckAllProcess(target), 3);
             });
         }
 
         public void Dispose()
         {
-            Task.WhenAll(_allTargets.Select(t => t.Stop())).Wait(30000);
         }
 
         private uint ConvertToUint(uint c, uint d) => 192 + (168 << 8) + (c << 16) + (d << 24);
