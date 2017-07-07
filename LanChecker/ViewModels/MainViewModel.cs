@@ -105,7 +105,7 @@ namespace LanChecker.ViewModels
             }
             catch (Exception exp)
             {
-                Console.WriteLine(exp);
+                MessageBox.Show("ARPループが終了しました\r\n" + exp);
             }
         }
 
