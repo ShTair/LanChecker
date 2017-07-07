@@ -5,8 +5,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LanChecker.ViewModels
 {
@@ -15,21 +13,22 @@ namespace LanChecker.ViewModels
         private static Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
         private static TrafficController _tc = new TrafficController();
 
-        public static event Action<int> QueueCountChanged;
-
         private Dictionary<string, DeviceInfo> _names;
 
         private byte[] _mac;
         private DateTime _lastReach;
-
-        private Task _run;
-        private CancellationTokenSource _cts;
 
         private uint _host;
 
         public event Action<bool, DateTime> StatusChanged;
 
         public event Action<bool> IsEnabledChanged;
+
+        private static readonly TimeSpan _ts1 = TimeSpan.Zero;
+        private static readonly TimeSpan _ts2 = TimeSpan.FromHours(1);
+        private static readonly TimeSpan _ts3 = TimeSpan.FromDays(3);
+
+        #region properties
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -38,12 +37,15 @@ namespace LanChecker.ViewModels
             get { return _Elapsed; }
             set
             {
+                if (value > _ts3) value = _ts3;
+
                 if (_Elapsed == value) return;
                 _Elapsed = value;
 
-                if (value == TimeSpan.Zero) Status = 0;
-                else if (value < TimeSpan.FromHours(1)) Status = 1;
-                else Status = 2;
+                if (value == _ts1) Status = 0;
+                else if (value < _ts2) Status = 1;
+                else if (value < _ts3) Status = 2;
+                else Status = 3;
 
                 ElapsedString = value.ToString(@"d\.hh\:mm");
 
@@ -178,6 +180,8 @@ namespace LanChecker.ViewModels
         private bool _IsEnabled;
         private PropertyChangedEventArgs _IsEnabledChangedEventArgs = new PropertyChangedEventArgs(nameof(IsEnabled));
 
+        #endregion
+
         public TargetViewModel(uint host, bool isInDhcp, Dictionary<string, DeviceInfo> names)
         {
             _mac = new byte[6];
@@ -192,60 +196,25 @@ namespace LanChecker.ViewModels
             _names = names;
         }
 
-        public void Start()
+        public void Check()
         {
-            _cts = new CancellationTokenSource();
-            _run = Task.Run(Run);
-        }
+            var result = SendArp();
 
-        public Task Stop()
-        {
-            _cts.Cancel();
-            return _run;
-        }
+            var now = DateTime.Now;
 
-        private async Task Run()
-        {
-            bool old = false;
-            int priority = IsInDhcp ? 1 : 2;
-
-            while (true)
+            if (result)
             {
-                using (await _tc.WaitAsync(priority))
-                {
-                    QueueCountChanged?.Invoke(_tc.Count);
-
-                    Console.WriteLine($"Start {priority} {_host >> 24} {old}");
-
-                    if (_cts.IsCancellationRequested) break;
-
-                    var result = SendArp();
-
-                    if (old != result)
-                    {
-                        old = result;
-                        Console.WriteLine($"{_host >> 24} {result}");
-                    }
-
-                    var now = DateTime.Now;
-
-                    if (result)
-                    {
-                        MacAddress = string.Join(":", _mac.Select(t => t.ToString("X2")));
-                        _lastReach = now;
-                    }
-
-                    var e = now - _lastReach;
-                    Elapsed = e.TotalDays < 3 ? e : TimeSpan.FromDays(3);
-                }
-                QueueCountChanged?.Invoke(_tc.Count);
-
-                priority = old ? 0 : (IsInDhcp || Elapsed < TimeSpan.FromDays(3)) ? 1 : 2;
-                IsEnabled = priority != 2;
-
-                try { await Task.Delay(old ? 20000 : IsInDhcp ? 60000 : 60000 * 60, _cts.Token); }
-                catch { break; }
+                MacAddress = string.Join(":", _mac.Select(t => t.ToString("X2")));
+                _lastReach = now;
             }
+
+            Elapsed = now - _lastReach;
+        }
+
+        public void Find()
+        {
+            _lastReach = DateTime.Now - _ts2;
+            Elapsed = _ts2;
         }
 
         private bool SendArp()
