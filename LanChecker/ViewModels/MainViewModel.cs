@@ -95,6 +95,28 @@ namespace LanChecker.ViewModels
             }
         }
 
+        private void CheckInProcess(TargetViewModel target)
+        {
+            target.Check();
+
+            if (target.Status == 3)
+            {
+                lock (_inTargets)
+                {
+                    _inTargets.Remove(target.IPAddress);
+                    Targets.Remove(target);
+                }
+            }
+            else
+            {
+                Task.Run(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(target.Status == 2 ? 60 : 20));
+                    _mlq.Enqueue(() => CheckAllProcess(target), target.Status == 0 ? 1 : 2);
+                });
+            }
+        }
+
         private void CheckAllProcess(TargetViewModel target)
         {
             target.Check();
@@ -107,6 +129,7 @@ namespace LanChecker.ViewModels
                     {
                         _inTargets.Add(target.IPAddress, target);
                         Targets.Add(target);
+                        _mlq.Enqueue(() => CheckAllProcess(target), 1);
                     }
                 }
             }
