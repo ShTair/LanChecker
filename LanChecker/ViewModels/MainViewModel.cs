@@ -93,6 +93,17 @@ namespace LanChecker.ViewModels
 
                 target.Start();
             }
+
+            Task.Run(RunChecking);
+        }
+
+        private async Task RunChecking()
+        {
+            while (true)
+            {
+                var p = await _mlq.Dequeue();
+                p();
+            }
         }
 
         private void CheckInProcess(TargetViewModel target)
