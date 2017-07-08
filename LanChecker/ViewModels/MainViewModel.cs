@@ -175,12 +175,11 @@ namespace LanChecker.ViewModels
                     {
                         lock (_inTargets)
                         {
-                            if (!_inTargets.ContainsKey(ip))
+                            TargetViewModel target;
+                            if (!_inTargets.TryGetValue(ip, out target))
                             {
-                                TargetViewModel target;
                                 if (_allTargets.TryGetValue(ip, out target))
                                 {
-                                    target.Find(mac);
                                     _inTargets.Add(target.IPAddress, target);
                                     _d.Invoke(() => Targets.Add(target));
                                     Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(_ =>
@@ -188,6 +187,11 @@ namespace LanChecker.ViewModels
                                         _mlq.Enqueue(() => CheckInProcess(target), 1);
                                     });
                                 }
+                            }
+
+                            if (target != null)
+                            {
+                                target.Find(mac);
                             }
                         }
                     }
