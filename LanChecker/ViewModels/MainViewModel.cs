@@ -81,10 +81,10 @@ namespace LanChecker.ViewModels
                     lock (_counterLock)
                     {
                         ReachCount += status ? 1 : -1;
-                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{status}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
+                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{target.IPAddress}\t{status}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
                     }
                 };
-                _mlq.Enqueue(() => CheckAllProcess(target), 3);
+                _mlq.Enqueue(() => CheckAllProcess(target, 3), 3);
                 return target;
             }).ToDictionary(t => t.IPAddress);
 
@@ -109,9 +109,9 @@ namespace LanChecker.ViewModels
             }
         }
 
-        private void CheckInProcess(TargetViewModel target)
+        private void CheckInProcess(TargetViewModel target, int p)
         {
-            Console.WriteLine($"Check IN {target.IPAddress}");
+            Console.WriteLine($"Check IN {p} {target.IPAddress}");
             target.Check();
 
             if (target.Status == 3)
@@ -126,14 +126,14 @@ namespace LanChecker.ViewModels
             {
                 Task.Delay(TimeSpan.FromSeconds(target.Status == 2 ? 60 : 20)).ContinueWith(_ =>
                 {
-                    _mlq.Enqueue(() => CheckInProcess(target), target.Status == 0 ? 1 : 2);
+                    _mlq.Enqueue(() => CheckInProcess(target, target.Status == 0 ? 1 : 2), target.Status == 0 ? 1 : 2);
                 });
             }
         }
 
-        private void CheckAllProcess(TargetViewModel target)
+        private void CheckAllProcess(TargetViewModel target, int p)
         {
-            Console.WriteLine($"Check OT {target.IPAddress}");
+            Console.WriteLine($"Check OT {p} {target.IPAddress}");
             target.Check();
 
             if (target.Status != 3)
@@ -147,7 +147,7 @@ namespace LanChecker.ViewModels
 
                         Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ =>
                         {
-                            _mlq.Enqueue(() => CheckInProcess(target), 1);
+                            _mlq.Enqueue(() => CheckInProcess(target, 1), 1);
                         });
                     }
                 }
@@ -155,7 +155,7 @@ namespace LanChecker.ViewModels
 
             Task.Delay(TimeSpan.FromHours(1)).ContinueWith(_ =>
             {
-                _mlq.Enqueue(() => CheckAllProcess(target), 3);
+                _mlq.Enqueue(() => CheckAllProcess(target, 3), 3);
             });
         }
 
@@ -184,7 +184,7 @@ namespace LanChecker.ViewModels
                                     _d.Invoke(() => Targets.Add(target));
                                     Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(_ =>
                                     {
-                                        _mlq.Enqueue(() => CheckInProcess(target), 1);
+                                        _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
                                     });
                                 }
                             }
