@@ -64,6 +64,7 @@ namespace LanChecker.ViewModels
             _d = Dispatcher.CurrentDispatcher;
 
             _mlq = new MultiLaneQueue<Action>(4);
+            _mlq.CountChanged += () => QueueCount = _mlq.Count;
             _inTargets = new Dictionary<int, TargetViewModel>();
 
             Targets = new ObservableCollection<TargetViewModel>();
@@ -99,7 +100,6 @@ namespace LanChecker.ViewModels
                 while (!IsStoped)
                 {
                     var p = await _mlq.Dequeue();
-                    QueueCount = _mlq.Count;
                     p();
                 }
             }

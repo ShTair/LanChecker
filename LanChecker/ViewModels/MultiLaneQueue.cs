@@ -13,6 +13,8 @@ namespace LanChecker.ViewModels
 
         public int Count { get; private set; }
 
+        public event Action CountChanged;
+
         public MultiLaneQueue(int count)
         {
             _qs = new Queue<T>[count];
@@ -34,6 +36,7 @@ namespace LanChecker.ViewModels
                 {
                     _qs[priority].Enqueue(item);
                     Count++;
+                    Task.Run(() => CountChanged?.Invoke());
                 }
             }
         }
@@ -45,6 +48,7 @@ namespace LanChecker.ViewModels
                 if (Count > 0)
                 {
                     Count--;
+                    Task.Run(() => CountChanged?.Invoke());
                     var ci = _nextIndex++ % _qs.Length;
 
                     if (_qs[ci].Count != 0)
