@@ -210,6 +210,27 @@ namespace LanChecker.ViewModels
             return result == 0;
         }
 
+        public string Serialize()
+        {
+            return $"{IPAddress}\t{MacAddress}\t{_lastReach.ToBinary()}\t{Status}";
+        }
+
+        public void Deserialize(string data)
+        {
+            try
+            {
+                var sp = data.Split('\t');
+                if (sp.Length != 4) return;
+
+                if (sp[0] != IPAddress.ToString()) return;
+
+                MacAddress = sp[1];
+                _lastReach = DateTime.FromBinary(long.Parse(sp[2]));
+                Status = int.Parse(sp[3]);
+            }
+            catch { }
+        }
+
         [DllImport("iphlpapi.dll", ExactSpelling = true)]
         private static extern int SendARP(uint dstIp, uint srcIp, byte[] mac, ref int macLen);
     }

@@ -1,4 +1,5 @@
 ﻿using LanChecker.Models;
+using LanChecker.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -88,6 +89,34 @@ namespace LanChecker.ViewModels
                 _mlq.Enqueue(() => CheckAllProcess(target, 3), 3);
                 return target;
             }).ToDictionary(t => t.IPAddress);
+
+            foreach (var da in from line in Settings.Default.Last.Split('\n')
+                               let sp = line.Split('\t')
+                               where sp.Length == 4
+                               let ip = int.Parse(sp[0])
+                               select new { IP = ip, Line = line })
+            {
+                TargetViewModel target;
+                if (!_allTargets.TryGetValue(da.IP, out target)) continue;
+                target.Deserialize(da.Line);
+
+                if (target.Status != 3)
+                {
+                    lock (_inTargets)
+                    {
+                        if (!_inTargets.ContainsKey(target.IPAddress))
+                        {
+                            _inTargets.Add(target.IPAddress, target);
+                            _d.Invoke(() => Targets.Add(target));
+
+                            Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ =>
+                            {
+                                _mlq.Enqueue(() => CheckInProcess(target, 1), 1);
+                            });
+                        }
+                    }
+                }
+            }
 
             _running = Task.Run(RunChecking);
             _ = ReceivingDhcp();
@@ -207,6 +236,8 @@ namespace LanChecker.ViewModels
         {
             IsStoped = true;
             _running.Wait();
+            Settings.Default.Last = string.Join("\n", _allTargets.Values.Select(t => t.Serialize()));
+            Settings.Default.Save();
         }
 
         private uint ConvertToUint(uint c, uint d) => 192 + (168 << 8) + (c << 16) + (d << 24);
