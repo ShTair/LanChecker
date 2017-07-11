@@ -231,9 +231,9 @@ namespace LanChecker.ViewModels
         public void Stop()
         {
             IsStoped = true;
-            _running.Wait();
             Settings.Default.Last = string.Join("\n", _allTargets.Values.Select(t => t.Serialize()));
             Settings.Default.Save();
+            _running.Wait();
         }
 
         private uint ConvertToUint(uint c, uint d) => 192 + (168 << 8) + (c << 16) + (d << 24);
