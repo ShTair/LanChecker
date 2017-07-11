@@ -108,11 +108,7 @@ namespace LanChecker.ViewModels
                         {
                             _inTargets.Add(target.IPAddress, target);
                             _d.Invoke(() => Targets.Add(target));
-
-                            Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ =>
-                            {
-                                _mlq.Enqueue(() => CheckInProcess(target, 1), 1);
-                            });
+                            _mlq.Enqueue(() => CheckInProcess(target, 1), 1);
                         }
                     }
                 }
