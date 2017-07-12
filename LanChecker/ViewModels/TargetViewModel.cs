@@ -23,7 +23,6 @@ namespace LanChecker.ViewModels
         public int IPAddress { get; }
 
         private byte[] _mac;
-        private DateTime _lastReach;
 
         #region properties
 
@@ -52,6 +51,20 @@ namespace LanChecker.ViewModels
         private TimeSpan _Elapsed;
         private PropertyChangedEventArgs _ElapsedChangedEventArgs = new PropertyChangedEventArgs(nameof(Elapsed));
 
+        public DateTime InLastReach
+        {
+            get { return _InLastReach; }
+            set
+            {
+                if (_InLastReach == value) return;
+                _InLastReach = value;
+                if (Status != 0) LastReachDateTime = value;
+                PropertyChanged?.Invoke(this, _InLastReachChangedEventArgs);
+            }
+        }
+        private DateTime _InLastReach;
+        private PropertyChangedEventArgs _InLastReachChangedEventArgs = new PropertyChangedEventArgs(nameof(InLastReach));
+
         public event Action<int, int> StatusChanged;
         public int Status
         {
@@ -62,12 +75,26 @@ namespace LanChecker.ViewModels
                 var old = _Status;
                 _Status = value;
                 IsIn = value <= 1;
+                LastReachDateTime = value == 0 ? DateTime.MaxValue : InLastReach;
                 StatusChanged?.Invoke(old, value);
                 PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
             }
         }
         private int _Status;
         private PropertyChangedEventArgs _StatusChangedEventArgs = new PropertyChangedEventArgs(nameof(Status));
+
+        public DateTime LastReachDateTime
+        {
+            get { return _LastReachDateTime; }
+            set
+            {
+                if (_LastReachDateTime == value) return;
+                _LastReachDateTime = value;
+                PropertyChanged?.Invoke(this, _LastReachDateTimeChangedEventArgs);
+            }
+        }
+        private DateTime _LastReachDateTime;
+        private PropertyChangedEventArgs _LastReachDateTimeChangedEventArgs = new PropertyChangedEventArgs(nameof(LastReachDateTime));
 
         public string ElapsedString
         {
@@ -142,7 +169,7 @@ namespace LanChecker.ViewModels
             {
                 if (_IsIn == value) return;
                 _IsIn = value;
-                IsInChanged?.Invoke(value, _lastReach);
+                IsInChanged?.Invoke(value, InLastReach);
                 PropertyChanged?.Invoke(this, _IsInChangedEventArgs);
             }
         }
@@ -154,7 +181,7 @@ namespace LanChecker.ViewModels
         public TargetViewModel(uint host, Dictionary<string, DeviceInfo> names)
         {
             _mac = new byte[6];
-            _lastReach = DateTime.Now.AddDays(-3);
+            InLastReach = DateTime.Now.AddDays(-3);
             Elapsed = TimeSpan.FromDays(3);
 
             _host = host;
@@ -172,22 +199,22 @@ namespace LanChecker.ViewModels
             if (result)
             {
                 MacAddress = string.Join(":", _mac.Select(t => t.ToString("X2")));
-                _lastReach = now;
+                InLastReach = now;
             }
 
-            Elapsed = now - _lastReach;
+            Elapsed = now - InLastReach;
         }
 
         public void Find(string mac)
         {
             MacAddress = mac;
-            _lastReach = DateTime.Now;
+            InLastReach = DateTime.Now;
             Elapsed = TimeSpan.Zero;
         }
 
         public void Out()
         {
-            _lastReach = DateTime.Now.AddDays(-3);
+            InLastReach = DateTime.Now.AddDays(-3);
         }
 
         private bool SendArp()
@@ -199,7 +226,7 @@ namespace LanChecker.ViewModels
 
         public string Serialize()
         {
-            return $"{IPAddress}\t{MacAddress}\t{_lastReach.ToBinary()}\t{Status}";
+            return $"{IPAddress}\t{MacAddress}\t{InLastReach.ToBinary()}\t{Status}";
         }
 
         public void Deserialize(string data)
@@ -212,7 +239,7 @@ namespace LanChecker.ViewModels
                 if (sp[0] != IPAddress.ToString()) return;
 
                 MacAddress = sp[1];
-                _lastReach = DateTime.FromBinary(long.Parse(sp[2]));
+                InLastReach = DateTime.FromBinary(long.Parse(sp[2]));
                 Status = int.Parse(sp[3]);
             }
             catch { }
