@@ -52,14 +52,17 @@ namespace LanChecker.ViewModels
         private TimeSpan _Elapsed;
         private PropertyChangedEventArgs _ElapsedChangedEventArgs = new PropertyChangedEventArgs(nameof(Elapsed));
 
+        public event Action<int, int> StatusChanged;
         public int Status
         {
             get { return _Status; }
             set
             {
                 if (_Status == value) return;
+                var old = _Status;
                 _Status = value;
                 IsIn = value <= 1;
+                StatusChanged?.Invoke(old, value);
                 PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
             }
         }
@@ -180,6 +183,11 @@ namespace LanChecker.ViewModels
             MacAddress = mac;
             _lastReach = DateTime.Now;
             Elapsed = TimeSpan.Zero;
+        }
+
+        public void Out()
+        {
+            _lastReach = DateTime.Now.AddDays(-3);
         }
 
         private bool SendArp()

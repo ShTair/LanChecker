@@ -86,6 +86,35 @@ namespace LanChecker.ViewModels
                         File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{target.IPAddress}\t{isin}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
                     }
                 };
+                target.StatusChanged += (old, status) =>
+                {
+                    IEnumerable<TargetViewModel> getot()
+                    {
+                        return _inTargets.Values.Where(t2 => t2 != target && t2.MacAddress == target.MacAddress);
+                    };
+
+                    if (status == 0)
+                    {
+                        lock (_inTargets)
+                        {
+                            foreach (var t2 in getot().Where(t2 => t2.Status != 0))
+                            {
+                                t2.Out();
+                            }
+                        }
+                    }
+                    else if (status == 2)
+                    {
+                        lock (_inTargets)
+                        {
+                            if (getot().Where(t2 => t2.Status <= 1).Any())
+                            {
+                                target.Out();
+                            }
+                        }
+                    }
+                };
+
                 _mlq.Enqueue(() => CheckAllProcess(target, 3), 3);
                 return target;
             }).ToDictionary(t => t.IPAddress);
