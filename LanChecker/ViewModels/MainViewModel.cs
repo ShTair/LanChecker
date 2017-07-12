@@ -78,12 +78,12 @@ namespace LanChecker.ViewModels
             _allTargets = Enumerable.Range(1, 254).Select(t =>
             {
                 var target = new TargetViewModel(ConvertToUint(sub, (uint)t), names);
-                target.StatusChanged += (status, time) =>
+                target.IsInChanged += (isin, time) =>
                 {
                     lock (_counterLock)
                     {
-                        ReachCount += status ? 1 : -1;
-                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{target.IPAddress}\t{status}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
+                        ReachCount += isin ? 1 : -1;
+                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{target.IPAddress}\t{isin}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
                     }
                 };
                 _mlq.Enqueue(() => CheckAllProcess(target, 3), 3);

@@ -10,23 +10,20 @@ namespace LanChecker.ViewModels
 {
     class TargetViewModel : INotifyPropertyChanged
     {
-        private static Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
+        private static readonly Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
         private static TrafficController _tc = new TrafficController();
-
-        private Dictionary<string, DeviceInfo> _names;
-
-        private byte[] _mac;
-        private DateTime _lastReach;
-
-        private uint _host;
-
-        public event Action<bool, DateTime> StatusChanged;
-
-        public event Action<bool> IsEnabledChanged;
 
         private static readonly TimeSpan _ts1 = TimeSpan.Zero;
         private static readonly TimeSpan _ts2 = TimeSpan.FromHours(1);
         private static readonly TimeSpan _ts3 = TimeSpan.FromDays(3);
+
+        private Dictionary<string, DeviceInfo> _names;
+
+        private uint _host;
+        public int IPAddress { get; }
+
+        private byte[] _mac;
+        private DateTime _lastReach;
 
         #region properties
 
@@ -54,6 +51,20 @@ namespace LanChecker.ViewModels
         }
         private TimeSpan _Elapsed;
         private PropertyChangedEventArgs _ElapsedChangedEventArgs = new PropertyChangedEventArgs(nameof(Elapsed));
+
+        public int Status
+        {
+            get { return _Status; }
+            set
+            {
+                if (_Status == value) return;
+                _Status = value;
+                IsIn = value <= 1;
+                PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
+            }
+        }
+        private int _Status;
+        private PropertyChangedEventArgs _StatusChangedEventArgs = new PropertyChangedEventArgs(nameof(Status));
 
         public string ElapsedString
         {
@@ -120,25 +131,7 @@ namespace LanChecker.ViewModels
         private string _FileName;
         private PropertyChangedEventArgs _FileNameChangedEventArgs = new PropertyChangedEventArgs(nameof(FileName));
 
-        public int IPAddress { get; }
-
-        public int Status
-        {
-            get { return _Status; }
-            set
-            {
-                if (_Status == value) return;
-                _Status = value;
-
-                if (value == 0 || value == 1) IsIn = true;
-                else IsIn = false;
-
-                PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
-            }
-        }
-        private int _Status;
-        private PropertyChangedEventArgs _StatusChangedEventArgs = new PropertyChangedEventArgs(nameof(Status));
-
+        public event Action<bool, DateTime> IsInChanged;
         public bool IsIn
         {
             get { return _IsIn; }
@@ -146,26 +139,12 @@ namespace LanChecker.ViewModels
             {
                 if (_IsIn == value) return;
                 _IsIn = value;
-                StatusChanged.Invoke(value, _lastReach);
+                IsInChanged?.Invoke(value, _lastReach);
                 PropertyChanged?.Invoke(this, _IsInChangedEventArgs);
             }
         }
         private bool _IsIn;
         private PropertyChangedEventArgs _IsInChangedEventArgs = new PropertyChangedEventArgs(nameof(IsIn));
-
-        public bool IsEnabled
-        {
-            get { return _IsEnabled; }
-            set
-            {
-                if (_IsEnabled == value) return;
-                _IsEnabled = value;
-                IsEnabledChanged?.Invoke(value);
-                PropertyChanged?.Invoke(this, _IsEnabledChangedEventArgs);
-            }
-        }
-        private bool _IsEnabled;
-        private PropertyChangedEventArgs _IsEnabledChangedEventArgs = new PropertyChangedEventArgs(nameof(IsEnabled));
 
         #endregion
 
