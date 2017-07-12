@@ -103,11 +103,11 @@ namespace LanChecker.ViewModels
                             }
                         }
                     }
-                    else if (status == 2)
+                    else
                     {
                         lock (_inTargets)
                         {
-                            if (getot().Where(t2 => t2.Status <= 1).Any())
+                            if (getot().Where(t2 => t2.Status == 0).Any())
                             {
                                 target.Out();
                             }
