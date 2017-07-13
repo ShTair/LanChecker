@@ -11,7 +11,6 @@ namespace LanChecker.ViewModels
     class TargetViewModel : INotifyPropertyChanged
     {
         private static readonly Regex _fileNameRegex = new Regex(@"[\/:,;*?""<>|]", RegexOptions.Compiled);
-        private static TrafficController _tc = new TrafficController();
 
         private static readonly TimeSpan _ts1 = TimeSpan.Zero;
         private static readonly TimeSpan _ts2 = TimeSpan.FromHours(1);
