@@ -95,7 +95,15 @@ namespace LanChecker.ViewModels
                         {
                             _inTargets.Add(target.IPAddress, target);
                             _d.Invoke(() => Targets.Add(target));
-                            _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
+                            if (target.Status <= 1)
+                            {
+                                ReachCount++;
+                                _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
+                            }
+                            else
+                            {
+                                _mlq.Enqueue(() => CheckInProcess(target, 2), 2);
+                            }
                         }
                     }
                 }
