@@ -49,14 +49,20 @@ namespace LanChecker.ViewModels
                 {
                     Count--;
                     Task.Run(() => CountChanged?.Invoke());
-                    var ci = _nextIndex++ % _qs.Length;
 
-                    if (_qs[ci].Count != 0)
+                    if (_qs[0].Count != 0)
                     {
-                        return Task.FromResult(_qs[ci].Dequeue());
+                        return Task.FromResult(_qs[0].Dequeue());
                     }
 
-                    for (int i = 0; i < _qs.Length; i++)
+                    var ci = _nextIndex++ % _qs.Length - 1;
+
+                    if (_qs[ci + 1].Count != 0)
+                    {
+                        return Task.FromResult(_qs[ci + 1].Dequeue());
+                    }
+
+                    for (int i = 1; i < _qs.Length + 1; i++)
                     {
                         if (_qs[i].Count != 0)
                         {
