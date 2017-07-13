@@ -75,9 +75,34 @@ namespace LanChecker.ViewModels
 
             Directory.CreateDirectory("log");
 
-            _allTargets = Enumerable.Range(1, 254).Select(t =>
+            _allTargets = Enumerable.Range(1, 254).Select(t => new TargetViewModel(ConvertToUint(sub, (uint)t), names)).ToDictionary(t => t.IPAddress);
+
+            foreach (var da in from line in Settings.Default.Last.Split('\n')
+                               let sp = line.Split('\t')
+                               where sp.Length == 4
+                               let ip = int.Parse(sp[0])
+                               select new { IP = ip, Line = line })
             {
-                var target = new TargetViewModel(ConvertToUint(sub, (uint)t), names);
+                TargetViewModel target;
+                if (!_allTargets.TryGetValue(da.IP, out target)) continue;
+                target.Deserialize(da.Line);
+
+                if (target.Status != 3)
+                {
+                    lock (_inTargets)
+                    {
+                        if (!_inTargets.ContainsKey(target.IPAddress))
+                        {
+                            _inTargets.Add(target.IPAddress, target);
+                            _d.Invoke(() => Targets.Add(target));
+                            _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
+                        }
+                    }
+                }
+            }
+
+            foreach (var target in _allTargets.Values)
+            {
                 target.IsInChanged += (isin, time) =>
                 {
                     lock (_counterLock)
@@ -116,31 +141,6 @@ namespace LanChecker.ViewModels
                 };
 
                 _mlq.Enqueue(() => CheckAllProcess(target, 3), 3);
-                return target;
-            }).ToDictionary(t => t.IPAddress);
-
-            foreach (var da in from line in Settings.Default.Last.Split('\n')
-                               let sp = line.Split('\t')
-                               where sp.Length == 4
-                               let ip = int.Parse(sp[0])
-                               select new { IP = ip, Line = line })
-            {
-                TargetViewModel target;
-                if (!_allTargets.TryGetValue(da.IP, out target)) continue;
-                target.Deserialize(da.Line);
-
-                if (target.Status != 3)
-                {
-                    lock (_inTargets)
-                    {
-                        if (!_inTargets.ContainsKey(target.IPAddress))
-                        {
-                            _inTargets.Add(target.IPAddress, target);
-                            _d.Invoke(() => Targets.Add(target));
-                            _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
-                        }
-                    }
-                }
             }
 
             _running = Task.Run(RunChecking);
