@@ -148,7 +148,7 @@ namespace LanChecker.ViewModels
                     }
                 };
 
-                _mlq.Enqueue(() => CheckAllProcess(target, 3), 3);
+                Task.Delay(TimeSpan.FromHours(target.IPAddress / (double)_allTargets.Count)).ContinueWith(_ => _mlq.Enqueue(() => CheckAllProcess(target, 3), 3));
             }
 
             _running = Task.Run(RunChecking);
