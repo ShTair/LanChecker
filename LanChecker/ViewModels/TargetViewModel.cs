@@ -57,7 +57,7 @@ namespace LanChecker.ViewModels
             {
                 if (_InLastReach == value) return;
                 _InLastReach = value;
-                if (Status != 0) LastReachDateTime = value;
+                if (Status > 1) LastReachDateTime = value;
                 PropertyChanged?.Invoke(this, _InLastReachChangedEventArgs);
             }
         }
@@ -74,7 +74,7 @@ namespace LanChecker.ViewModels
                 var old = _Status;
                 _Status = value;
                 IsIn = value <= 1;
-                LastReachDateTime = value == 0 ? DateTime.MaxValue : InLastReach;
+                LastReachDateTime = value <= 1 ? DateTime.MaxValue : InLastReach;
                 StatusChanged?.Invoke(old, value);
                 PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
             }
