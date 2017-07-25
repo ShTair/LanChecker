@@ -9,6 +9,8 @@ namespace LanChecker.ViewModels
     {
         private HashSet<TargetViewModel> _targets;
 
+        public event Action Expired;
+
         #region properties
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -46,7 +48,12 @@ namespace LanChecker.ViewModels
                 if (Elapsed == TimeSpan.Zero) Status = 0;
                 else if (Elapsed < TimeSpan.FromHours(1)) Status = 1;
                 else if (Elapsed < TimeSpan.FromDays(3)) Status = 2;
-                else Status = 3;
+                else
+                {
+                    Status = 3;
+                    IsRunning = false;
+                    Expired?.Invoke();
+                }
 
                 PropertyChanged?.Invoke(this, _ElapsedChangedEventArgs);
             }
@@ -74,15 +81,30 @@ namespace LanChecker.ViewModels
         }
         private PropertyChangedEventArgs _OrderTimeChangedEventArgs = new PropertyChangedEventArgs(nameof(OrderTime));
 
+        public int LastIP
+        {
+            get { return _LastIP; }
+            set
+            {
+                if (_LastIP == value) return;
+                _LastIP = value;
+                PropertyChanged?.Invoke(this, _LastIPChangedEventArgs);
+            }
+        }
+        private int _LastIP;
+        private PropertyChangedEventArgs _LastIPChangedEventArgs = new PropertyChangedEventArgs(nameof(LastIP));
+
         #endregion
 
-        public DeviceViewModel(string mac, string name, string category)
+        public DeviceViewModel(string mac, string name, string category, DateTime lastReach)
         {
             _targets = new HashSet<TargetViewModel>();
 
             MacAddress = mac;
             Name = name;
             Category = category;
+
+            LastReach = lastReach;
 
             IsRunning = true;
             Task.Run((Action)Run);
@@ -99,8 +121,10 @@ namespace LanChecker.ViewModels
             }
         }
 
-        public void Reach()
+        public void Reach(int ip)
         {
+            LastIP = ip;
+
             LastReach = DateTime.Now;
             Elapsed = TimeSpan.Zero;
         }

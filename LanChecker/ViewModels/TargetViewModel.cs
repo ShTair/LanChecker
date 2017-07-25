@@ -23,6 +23,8 @@ namespace LanChecker.ViewModels
 
         private byte[] _mac;
 
+        public event Action<string> Reached;
+
         #region properties
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -198,6 +200,7 @@ namespace LanChecker.ViewModels
             if (result)
             {
                 MacAddress = string.Join(":", _mac.Select(t => t.ToString("X2")));
+                Reached?.Invoke(MacAddress);
                 InLastReach = now;
             }
 

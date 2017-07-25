@@ -23,6 +23,8 @@ namespace LanChecker.ViewModels
         private Dictionary<int, TargetViewModel> _allTargets;
         private Dictionary<int, TargetViewModel> _inTargets;
 
+        private Dictionary<string, DeviceViewModel> _devices;
+
         public bool IsStoped { get; private set; }
         private Task _running;
 
@@ -31,6 +33,8 @@ namespace LanChecker.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ObservableCollection<TargetViewModel> Targets { get; }
+
+        public ObservableCollection<DeviceViewModel> Devices { get; }
 
         public int ReachCount
         {
@@ -70,6 +74,8 @@ namespace LanChecker.ViewModels
 
             Targets = new ObservableCollection<TargetViewModel>();
 
+            _devices = new Dictionary<string, DeviceViewModel>();
+            Devices = new ObservableCollection<DeviceViewModel>();
 
             if (names == null) names = new Dictionary<string, DeviceInfo>();
 
@@ -145,6 +151,36 @@ namespace LanChecker.ViewModels
                                 target.Out();
                             }
                         }
+                    }
+                };
+                target.Reached += mac =>
+                {
+                    lock (_devices)
+                    {
+                        DeviceViewModel device;
+                        if (!_devices.TryGetValue(mac, out device))
+                        {
+                            DeviceInfo di;
+                            if (!names.TryGetValue(mac, out di))
+                            {
+                                di = new DeviceInfo(mac, null, "Unknown");
+                            }
+                            device = new DeviceViewModel(mac, di.Name, di.FileName, DateTime.Now);
+
+                            device.Expired += () =>
+                            {
+                                lock (_devices)
+                                {
+                                    _devices.Remove(mac);
+                                    _d.Invoke(() => Devices.Remove(device));
+                                }
+                            };
+
+                            _devices.Add(mac, device);
+                            _d.Invoke(() => Devices.Add(device));
+                        }
+
+                        device.Reach(target.IPAddress);
                     }
                 };
 
