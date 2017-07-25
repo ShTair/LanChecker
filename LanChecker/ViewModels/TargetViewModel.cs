@@ -217,6 +217,7 @@ namespace LanChecker.ViewModels
         public void Find(string mac)
         {
             MacAddress = mac;
+            Reached?.Invoke(MacAddress);
             InLastReach = DateTime.Now;
             Elapsed = TimeSpan.Zero;
         }
