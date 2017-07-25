@@ -45,6 +45,8 @@ namespace LanChecker.ViewModels
                 if (_Elapsed == value) return;
                 _Elapsed = value;
 
+                ElapsedString = value.ToString(@"d\.hh\:mm");
+
                 if (Elapsed == TimeSpan.Zero) Status = 0;
                 else if (Elapsed < TimeSpan.FromHours(1)) Status = 1;
                 else if (Elapsed < TimeSpan.FromDays(3)) Status = 2;
@@ -60,6 +62,19 @@ namespace LanChecker.ViewModels
         }
         private TimeSpan _Elapsed;
         private PropertyChangedEventArgs _ElapsedChangedEventArgs = new PropertyChangedEventArgs(nameof(Elapsed));
+
+        public string ElapsedString
+        {
+            get { return _ElapsedString; }
+            set
+            {
+                if (_ElapsedString == value) return;
+                _ElapsedString = value;
+                PropertyChanged?.Invoke(this, _ElapsedStringChangedEventArgs);
+            }
+        }
+        private string _ElapsedString = "0.00:00";
+        private PropertyChangedEventArgs _ElapsedStringChangedEventArgs = new PropertyChangedEventArgs(nameof(ElapsedString));
 
         public int Status
         {
@@ -105,6 +120,7 @@ namespace LanChecker.ViewModels
             Category = category;
 
             LastReach = lastReach;
+            Elapsed = DateTime.Now - LastReach;
 
             IsRunning = true;
             Task.Run((Action)Run);

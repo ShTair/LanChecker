@@ -11,11 +11,11 @@
         mc:Ignorable="d"
         Title="LAN Checker" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <Window.Resources>
-        <CollectionViewSource x:Key="Source1" Source="{Binding Targets}" IsLiveSortingRequested="True">
+        <CollectionViewSource x:Key="Source1" Source="{Binding Devices}" IsLiveSortingRequested="True">
             <CollectionViewSource.SortDescriptions>
-                <ComponentModel:SortDescription Direction="Descending" PropertyName="LastReachDateTime" />
+                <ComponentModel:SortDescription Direction="Descending" PropertyName="OrderTime" />
                 <ComponentModel:SortDescription Direction="Ascending" PropertyName="Name" />
-                <ComponentModel:SortDescription Direction="Ascending" PropertyName="IPAddress" />
+                <ComponentModel:SortDescription Direction="Ascending" PropertyName="LastIP" />
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
         <cv:ColorConverter x:Key="ColorConverter" />
@@ -69,7 +69,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Height="16" Margin="3,1" Text="{Binding IPAddress}" TextAlignment="Right" />
+                            <TextBlock Height="16" Margin="3,1" Text="{Binding LastIP}" TextAlignment="Right" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
