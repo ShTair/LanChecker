@@ -7,7 +7,7 @@ namespace LanChecker.ViewModels
 {
     class DeviceViewModel : INotifyPropertyChanged, IDisposable
     {
-        private HashSet<TargetViewModel> _targets;
+        private HashSet<int> _targets;
 
         public event Action Expired;
 
@@ -113,7 +113,7 @@ namespace LanChecker.ViewModels
 
         public DeviceViewModel(string mac, string name, string category, DateTime lastReach)
         {
-            _targets = new HashSet<TargetViewModel>();
+            _targets = new HashSet<int>();
 
             MacAddress = mac;
             Name = name;
@@ -131,7 +131,7 @@ namespace LanChecker.ViewModels
             while (IsRunning)
             {
                 await Task.Delay(5000);
-                if (LastReach >= DateTime.Now.AddSeconds(-30)) continue;
+                if (_targets.Count != 0) continue;
 
                 Elapsed = DateTime.Now - LastReach;
             }
@@ -139,10 +139,18 @@ namespace LanChecker.ViewModels
 
         public void Reach(int ip)
         {
+            _targets.Add(ip);
             LastIP = ip;
 
             LastReach = DateTime.Now;
             Elapsed = TimeSpan.Zero;
+        }
+
+        public void Unreach(int ip)
+        {
+            _targets.Remove(ip);
+
+            Elapsed = DateTime.Now - LastReach;
         }
 
         public void Dispose()

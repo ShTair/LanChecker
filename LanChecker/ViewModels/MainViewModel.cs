@@ -183,6 +183,17 @@ namespace LanChecker.ViewModels
                         device.Reach(target.IPAddress);
                     }
                 };
+                target.Unreached += mac =>
+                {
+                    lock (_devices)
+                    {
+                        DeviceViewModel device;
+                        if (_devices.TryGetValue(mac, out device))
+                        {
+                            device.Unreach(target.IPAddress);
+                        }
+                    }
+                };
 
                 _mlq.Enqueue(() => CheckAllProcess(target, 3), 3);
             }

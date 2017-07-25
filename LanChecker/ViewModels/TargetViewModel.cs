@@ -24,6 +24,7 @@ namespace LanChecker.ViewModels
         private byte[] _mac;
 
         public event Action<string> Reached;
+        public event Action<string> Unreached;
 
         #region properties
 
@@ -116,6 +117,7 @@ namespace LanChecker.ViewModels
             set
             {
                 if (_MacAddress == value) return;
+                Unreached?.Invoke(_MacAddress);
                 _MacAddress = value;
 
                 DeviceInfo name;
@@ -203,6 +205,11 @@ namespace LanChecker.ViewModels
                 Reached?.Invoke(MacAddress);
                 InLastReach = now;
             }
+            else
+            {
+                Unreached?.Invoke(MacAddress);
+            }
+
 
             Elapsed = now - InLastReach;
         }
