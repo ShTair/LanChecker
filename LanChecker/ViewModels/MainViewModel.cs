@@ -69,14 +69,12 @@ namespace LanChecker.ViewModels
 
             _mlq = new MultiLaneQueue<Action>(4);
             _mlq.CountChanged += () => QueueCount = _mlq.Count;
-            _inTargets = new Dictionary<int, TargetViewModel>();
+
+            if (names == null) names = new Dictionary<string, DeviceInfo>();
+            Directory.CreateDirectory("log");
 
             _devices = new Dictionary<string, DeviceViewModel>();
             Devices = new ObservableCollection<DeviceViewModel>();
-
-            if (names == null) names = new Dictionary<string, DeviceInfo>();
-
-            Directory.CreateDirectory("log");
 
             foreach (var item in from line in Settings.Default.LastDevices.Split('\n')
                                  let sp = line.Split('\t')
@@ -88,6 +86,7 @@ namespace LanChecker.ViewModels
             }
 
             _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t)).ToDictionary(t => t.IPAddress);
+            _inTargets = new Dictionary<int, TargetViewModel>();
 
             foreach (var da in from line in Settings.Default.Last.Split('\n')
                                let sp = line.Split('\t')
@@ -121,34 +120,6 @@ namespace LanChecker.ViewModels
 
             foreach (var target in _allTargets.Values)
             {
-                target.StatusChanged += (old, status) =>
-                {
-                    IEnumerable<TargetViewModel> getot()
-                    {
-                        return _inTargets.Values.Where(t2 => t2 != target && t2.MacAddress == target.MacAddress);
-                    };
-
-                    if (status == 0)
-                    {
-                        lock (_inTargets)
-                        {
-                            foreach (var t2 in getot().Where(t2 => t2.Status != 0))
-                            {
-                                t2.Out();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        lock (_inTargets)
-                        {
-                            if (getot().Where(t2 => t2.Status == 0).Any())
-                            {
-                                target.Out();
-                            }
-                        }
-                    }
-                };
                 target.Reached += mac =>
                 {
                     lock (_devices)
