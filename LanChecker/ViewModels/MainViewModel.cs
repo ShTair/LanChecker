@@ -104,7 +104,6 @@ namespace LanChecker.ViewModels
                             _d.Invoke(() => Targets.Add(target));
                             if (target.Status <= 1)
                             {
-                                ReachCount++;
                                 _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
                             }
                             else
@@ -118,14 +117,6 @@ namespace LanChecker.ViewModels
 
             foreach (var target in _allTargets.Values)
             {
-                target.IsInChanged += (isin, time) =>
-                {
-                    lock (_counterLock)
-                    {
-                        ReachCount += isin ? 1 : -1;
-                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{target.IPAddress}\t{isin}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
-                    }
-                };
                 target.StatusChanged += (old, status) =>
                 {
                     IEnumerable<TargetViewModel> getot()
@@ -166,8 +157,7 @@ namespace LanChecker.ViewModels
                             {
                                 di = new DeviceInfo(mac, null, "Unknown");
                             }
-                            device = new DeviceViewModel(mac, di.Name, di.FileName, DateTime.Now);
-
+                            device = new DeviceViewModel(mac, di.Name, di.FileName);
                             device.Expired += () =>
                             {
                                 lock (_devices)
@@ -176,6 +166,16 @@ namespace LanChecker.ViewModels
                                     _d.Invoke(() => Devices.Remove(device));
                                 }
                             };
+                            device.IsInChanged += (isin, time) =>
+                            {
+                                lock (_counterLock)
+                                {
+                                    ReachCount += isin ? 1 : -1;
+                                    File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{target.IPAddress}\t{isin}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
+                                }
+                            };
+
+                            device.Start(DateTime.Now);
 
                             _devices.Add(mac, device);
                             _d.Invoke(() => Devices.Add(device));

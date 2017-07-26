@@ -10,6 +10,7 @@ namespace LanChecker.ViewModels
         private HashSet<int> _targets;
 
         public event Action Expired;
+        public event Action<bool, DateTime> IsInChanged;
 
         #region properties
 
@@ -60,7 +61,7 @@ namespace LanChecker.ViewModels
                 PropertyChanged?.Invoke(this, _ElapsedChangedEventArgs);
             }
         }
-        private TimeSpan _Elapsed;
+        private TimeSpan _Elapsed = TimeSpan.MinValue;
         private PropertyChangedEventArgs _ElapsedChangedEventArgs = new PropertyChangedEventArgs(nameof(Elapsed));
 
         public string ElapsedString
@@ -85,10 +86,26 @@ namespace LanChecker.ViewModels
                 _Status = value;
                 PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
                 PropertyChanged?.Invoke(this, _OrderTimeChangedEventArgs);
+
+                IsIn = value <= 1;
             }
         }
-        private int _Status;
+        private int _Status = -1;
         private PropertyChangedEventArgs _StatusChangedEventArgs = new PropertyChangedEventArgs(nameof(Status));
+
+        public bool IsIn
+        {
+            get { return _IsIn; }
+            set
+            {
+                if (_IsIn == value) return;
+                _IsIn = value;
+                IsInChanged?.Invoke(value, LastReach);
+                PropertyChanged?.Invoke(this, _IsInChangedEventArgs);
+            }
+        }
+        private bool _IsIn;
+        private PropertyChangedEventArgs _IsInChangedEventArgs = new PropertyChangedEventArgs(nameof(IsIn));
 
         public DateTime OrderTime
         {
@@ -111,14 +128,17 @@ namespace LanChecker.ViewModels
 
         #endregion
 
-        public DeviceViewModel(string mac, string name, string category, DateTime lastReach)
+        public DeviceViewModel(string mac, string name, string category)
         {
             _targets = new HashSet<int>();
 
             MacAddress = mac;
             Name = name;
             Category = category;
+        }
 
+        public void Start(DateTime lastReach)
+        {
             LastReach = lastReach;
             Elapsed = DateTime.Now - LastReach;
 

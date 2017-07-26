@@ -34,5 +34,17 @@ namespace LanChecker.Properties {
                 this["Last"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastDevices {
+            get {
+                return ((string)(this["LastDevices"]));
+            }
+            set {
+                this["LastDevices"] = value;
+            }
+        }
     }
 }
