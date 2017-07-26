@@ -149,6 +149,7 @@ namespace LanChecker.ViewModels
         public void Unreach(int ip)
         {
             _targets.Remove(ip);
+            if (_targets.Count != 0) return;
 
             Elapsed = DateTime.Now - LastReach;
         }
