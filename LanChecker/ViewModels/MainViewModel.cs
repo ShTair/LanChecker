@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows;
@@ -81,7 +82,7 @@ namespace LanChecker.ViewModels
 
             Directory.CreateDirectory("log");
 
-            _allTargets = Enumerable.Range(1, 254).Select(t => new TargetViewModel(ConvertToUint(sub, (uint)t), names)).ToDictionary(t => t.IPAddress);
+            _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t, names)).ToDictionary(t => t.IPAddress);
 
             foreach (var da in from line in Settings.Default.Last.Split('\n')
                                let sp = line.Split('\t')
@@ -321,5 +322,21 @@ namespace LanChecker.ViewModels
         }
 
         private uint ConvertToUint(uint c, uint d) => 192 + (168 << 8) + (c << 16) + (d << 24);
+
+        private IEnumerable<uint> GenerateIps()
+        {
+            var ips = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (var ip in ips)
+            {
+                var ipb = ip.GetAddressBytes();
+                if (ipb.Length != 4) continue;
+                if (ipb[0] != 192 || ipb[1] != 168) continue;
+
+                foreach (var sub in Enumerable.Range(1, 254))
+                {
+                    yield return ConvertToUint(ipb[2], (uint)sub);
+                }
+            }
+        }
     }
 }
