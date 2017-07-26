@@ -65,7 +65,7 @@ namespace LanChecker.ViewModels
 
         #endregion
 
-        public MainViewModel(uint sub, Dictionary<string, DeviceInfo> names)
+        public MainViewModel(Dictionary<string, DeviceInfo> names)
         {
             _d = Dispatcher.CurrentDispatcher;
 

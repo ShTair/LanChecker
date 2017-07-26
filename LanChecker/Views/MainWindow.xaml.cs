@@ -15,8 +15,6 @@ namespace LanChecker.Views
     {
         public MainWindow()
         {
-            var args = Environment.GetCommandLineArgs();
-
             Dictionary<string, DeviceInfo> names = null;
             if (File.Exists("mac.txt"))
             {
@@ -24,7 +22,7 @@ namespace LanChecker.Views
             }
 
             InitializeComponent();
-            DataContext = new MainViewModel(uint.Parse(args[1]), names);
+            DataContext = new MainViewModel(names);
         }
 
         private void Window_Closed(object sender, EventArgs e)
