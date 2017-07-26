@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,6 +24,8 @@ namespace LanChecker.ViewModels
         private Dictionary<int, TargetViewModel> _allTargets;
         private Dictionary<int, TargetViewModel> _inTargets;
 
+        private Dictionary<string, DeviceViewModel> _devices;
+
         public bool IsStoped { get; private set; }
         private Task _running;
 
@@ -31,6 +34,8 @@ namespace LanChecker.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ObservableCollection<TargetViewModel> Targets { get; }
+
+        public ObservableCollection<DeviceViewModel> Devices { get; }
 
         public int ReachCount
         {
@@ -60,7 +65,7 @@ namespace LanChecker.ViewModels
 
         #endregion
 
-        public MainViewModel(uint sub, Dictionary<string, DeviceInfo> names)
+        public MainViewModel(Dictionary<string, DeviceInfo> names)
         {
             _d = Dispatcher.CurrentDispatcher;
 
@@ -70,12 +75,23 @@ namespace LanChecker.ViewModels
 
             Targets = new ObservableCollection<TargetViewModel>();
 
+            _devices = new Dictionary<string, DeviceViewModel>();
+            Devices = new ObservableCollection<DeviceViewModel>();
 
             if (names == null) names = new Dictionary<string, DeviceInfo>();
 
             Directory.CreateDirectory("log");
 
-            _allTargets = Enumerable.Range(1, 254).Select(t => new TargetViewModel(ConvertToUint(sub, (uint)t), names)).ToDictionary(t => t.IPAddress);
+            foreach (var item in from line in Settings.Default.LastDevices.Split('\n')
+                                 let sp = line.Split('\t')
+                                 where sp.Length == 2
+                                 select sp)
+            {
+                var lastReach = DateTime.FromBinary(long.Parse(item[1]));
+                var device = CreateDeviceViewModel(names, item[0], lastReach);
+            }
+
+            _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t)).ToDictionary(t => t.IPAddress);
 
             foreach (var da in from line in Settings.Default.Last.Split('\n')
                                let sp = line.Split('\t')
@@ -97,7 +113,6 @@ namespace LanChecker.ViewModels
                             _d.Invoke(() => Targets.Add(target));
                             if (target.Status <= 1)
                             {
-                                ReachCount++;
                                 _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
                             }
                             else
@@ -111,14 +126,6 @@ namespace LanChecker.ViewModels
 
             foreach (var target in _allTargets.Values)
             {
-                target.IsInChanged += (isin, time) =>
-                {
-                    lock (_counterLock)
-                    {
-                        ReachCount += isin ? 1 : -1;
-                        File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{target.IPAddress}\t{isin}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
-                    }
-                };
                 target.StatusChanged += (old, status) =>
                 {
                     IEnumerable<TargetViewModel> getot()
@@ -144,6 +151,25 @@ namespace LanChecker.ViewModels
                             {
                                 target.Out();
                             }
+                        }
+                    }
+                };
+                target.Reached += mac =>
+                {
+                    lock (_devices)
+                    {
+                        var device = CreateDeviceViewModel(names, mac, DateTime.MinValue);
+                        device.Reach(target.IPAddress);
+                    }
+                };
+                target.Unreached += mac =>
+                {
+                    lock (_devices)
+                    {
+                        DeviceViewModel device;
+                        if (_devices.TryGetValue(mac, out device))
+                        {
+                            device.Unreach(target.IPAddress);
                         }
                     }
                 };
@@ -265,14 +291,71 @@ namespace LanChecker.ViewModels
             }
         }
 
+        private DeviceViewModel CreateDeviceViewModel(Dictionary<string, DeviceInfo> names, string mac, DateTime lastReach)
+        {
+            DeviceViewModel device;
+            if (!_devices.TryGetValue(mac, out device))
+            {
+                DeviceInfo di;
+                if (!names.TryGetValue(mac, out di))
+                {
+                    di = new DeviceInfo(mac, null, "Unknown");
+                }
+                device = new DeviceViewModel(mac, di.Name, di.FileName);
+                device.Expired += () =>
+                {
+                    lock (_devices)
+                    {
+                        _devices.Remove(mac);
+                        _d.Invoke(() => Devices.Remove(device));
+                    }
+                };
+
+                if (lastReach != DateTime.MinValue) device.Start(lastReach);
+
+                device.IsInChanged += (isin, time) =>
+                {
+                    lock (_counterLock)
+                    {
+                        ReachCount += isin ? 1 : -1;
+                        File.AppendAllLines($"log\\log_{device.Category}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{isin}\t{device.MacAddress}\t{device.Name}\t{device.Category}" });
+                    }
+                };
+
+                if (lastReach == DateTime.MinValue) device.Start(DateTime.Now);
+
+                _devices.Add(mac, device);
+                _d.Invoke(() => Devices.Add(device));
+            }
+
+            return device;
+        }
+
         public void Stop()
         {
             IsStoped = true;
             Settings.Default.Last = string.Join("\n", _allTargets.Values.Select(t => t.Serialize()));
+            Settings.Default.LastDevices = string.Join("\n", _devices.Values.Select(t => t.MacAddress + "\t" + t.LastReach.ToBinary()));
             Settings.Default.Save();
             _running.Wait();
         }
 
         private uint ConvertToUint(uint c, uint d) => 192 + (168 << 8) + (c << 16) + (d << 24);
+
+        private IEnumerable<uint> GenerateIps()
+        {
+            var ips = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (var ip in ips)
+            {
+                var ipb = ip.GetAddressBytes();
+                if (ipb.Length != 4) continue;
+                if (ipb[0] != 192 || ipb[1] != 168) continue;
+
+                foreach (var sub in Enumerable.Range(1, 254))
+                {
+                    yield return ConvertToUint(ipb[2], (uint)sub);
+                }
+            }
+        }
     }
 }
