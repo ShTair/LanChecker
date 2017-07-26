@@ -82,6 +82,46 @@ namespace LanChecker.ViewModels
 
             Directory.CreateDirectory("log");
 
+            foreach (var item in from line in Settings.Default.LastDevices.Split('\n')
+                                 let sp = line.Split('\t')
+                                 where sp.Length == 2
+                                 select sp)
+            {
+                var lastReach = DateTime.FromBinary(long.Parse(item[1]));
+                DeviceViewModel device;
+                if (!_devices.TryGetValue(item[0], out device))
+                {
+                    DeviceInfo di;
+                    if (!names.TryGetValue(item[0], out di))
+                    {
+                        di = new DeviceInfo(item[0], null, "Unknown");
+                    }
+                    device = new DeviceViewModel(item[0], di.Name, di.FileName);
+                    device.Expired += () =>
+                    {
+                        lock (_devices)
+                        {
+                            _devices.Remove(item[0]);
+                            _d.Invoke(() => Devices.Remove(device));
+                        }
+                    };
+
+                    device.Start(lastReach);
+
+                    device.IsInChanged += (isin, time) =>
+                    {
+                        lock (_counterLock)
+                        {
+                            ReachCount += isin ? 1 : -1;
+                            File.AppendAllLines($"log\\log_{device.Category}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{isin}\t{device.MacAddress}\t{device.Name}\t{device.Category}" });
+                        }
+                    };
+
+                    _devices.Add(item[0], device);
+                    _d.Invoke(() => Devices.Add(device));
+                }
+            }
+
             _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t, names)).ToDictionary(t => t.IPAddress);
 
             foreach (var da in from line in Settings.Default.Last.Split('\n')
@@ -317,6 +357,7 @@ namespace LanChecker.ViewModels
         {
             IsStoped = true;
             Settings.Default.Last = string.Join("\n", _allTargets.Values.Select(t => t.Serialize()));
+            Settings.Default.LastDevices = string.Join("\n", _devices.Values.Select(t => t.MacAddress + "\t" + t.LastReach.ToBinary()));
             Settings.Default.Save();
             _running.Wait();
         }
