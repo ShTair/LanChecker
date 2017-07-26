@@ -122,7 +122,7 @@ namespace LanChecker.ViewModels
                 }
             }
 
-            _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t, names)).ToDictionary(t => t.IPAddress);
+            _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t)).ToDictionary(t => t.IPAddress);
 
             foreach (var da in from line in Settings.Default.Last.Split('\n')
                                let sp = line.Split('\t')
@@ -211,7 +211,7 @@ namespace LanChecker.ViewModels
                                 lock (_counterLock)
                                 {
                                     ReachCount += isin ? 1 : -1;
-                                    File.AppendAllLines($"log\\log_{target.FileName}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{target.IPAddress}\t{isin}\t{target.MacAddress}\t{target.Name}\t{target.FileName}" });
+                                    File.AppendAllLines($"log\\log_{device.Category}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{isin}\t{device.MacAddress}\t{device.Name}\t{device.Category}" });
                                 }
                             };
 
