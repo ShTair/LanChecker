@@ -33,8 +33,6 @@ namespace LanChecker.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableCollection<TargetViewModel> Targets { get; }
-
         public ObservableCollection<DeviceViewModel> Devices { get; }
 
         public int ReachCount
@@ -73,8 +71,6 @@ namespace LanChecker.ViewModels
             _mlq.CountChanged += () => QueueCount = _mlq.Count;
             _inTargets = new Dictionary<int, TargetViewModel>();
 
-            Targets = new ObservableCollection<TargetViewModel>();
-
             _devices = new Dictionary<string, DeviceViewModel>();
             Devices = new ObservableCollection<DeviceViewModel>();
 
@@ -110,7 +106,6 @@ namespace LanChecker.ViewModels
                         if (!_inTargets.ContainsKey(target.IPAddress))
                         {
                             _inTargets.Add(target.IPAddress, target);
-                            _d.Invoke(() => Targets.Add(target));
                             if (target.Status <= 1)
                             {
                                 _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
@@ -207,7 +202,6 @@ namespace LanChecker.ViewModels
                 lock (_inTargets)
                 {
                     _inTargets.Remove(target.IPAddress);
-                    _d.Invoke(() => Targets.Remove(target));
                 }
             }
             else
@@ -231,7 +225,6 @@ namespace LanChecker.ViewModels
                     if (!_inTargets.ContainsKey(target.IPAddress))
                     {
                         _inTargets.Add(target.IPAddress, target);
-                        _d.Invoke(() => Targets.Add(target));
 
                         Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ =>
                         {
@@ -269,7 +262,6 @@ namespace LanChecker.ViewModels
                                 if (_allTargets.TryGetValue(ip, out target))
                                 {
                                     _inTargets.Add(target.IPAddress, target);
-                                    _d.Invoke(() => Targets.Add(target));
                                     Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(_ =>
                                     {
                                         _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
