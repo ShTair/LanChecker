@@ -88,38 +88,7 @@ namespace LanChecker.ViewModels
                                  select sp)
             {
                 var lastReach = DateTime.FromBinary(long.Parse(item[1]));
-                DeviceViewModel device;
-                if (!_devices.TryGetValue(item[0], out device))
-                {
-                    DeviceInfo di;
-                    if (!names.TryGetValue(item[0], out di))
-                    {
-                        di = new DeviceInfo(item[0], null, "Unknown");
-                    }
-                    device = new DeviceViewModel(item[0], di.Name, di.FileName);
-                    device.Expired += () =>
-                    {
-                        lock (_devices)
-                        {
-                            _devices.Remove(item[0]);
-                            _d.Invoke(() => Devices.Remove(device));
-                        }
-                    };
-
-                    device.Start(lastReach);
-
-                    device.IsInChanged += (isin, time) =>
-                    {
-                        lock (_counterLock)
-                        {
-                            ReachCount += isin ? 1 : -1;
-                            File.AppendAllLines($"log\\log_{device.Category}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{isin}\t{device.MacAddress}\t{device.Name}\t{device.Category}" });
-                        }
-                    };
-
-                    _devices.Add(item[0], device);
-                    _d.Invoke(() => Devices.Add(device));
-                }
+                var device = CreateDeviceViewModel(names, item[0], lastReach);
             }
 
             _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t)).ToDictionary(t => t.IPAddress);
@@ -189,38 +158,7 @@ namespace LanChecker.ViewModels
                 {
                     lock (_devices)
                     {
-                        DeviceViewModel device;
-                        if (!_devices.TryGetValue(mac, out device))
-                        {
-                            DeviceInfo di;
-                            if (!names.TryGetValue(mac, out di))
-                            {
-                                di = new DeviceInfo(mac, null, "Unknown");
-                            }
-                            device = new DeviceViewModel(mac, di.Name, di.FileName);
-                            device.Expired += () =>
-                            {
-                                lock (_devices)
-                                {
-                                    _devices.Remove(mac);
-                                    _d.Invoke(() => Devices.Remove(device));
-                                }
-                            };
-                            device.IsInChanged += (isin, time) =>
-                            {
-                                lock (_counterLock)
-                                {
-                                    ReachCount += isin ? 1 : -1;
-                                    File.AppendAllLines($"log\\log_{device.Category}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{isin}\t{device.MacAddress}\t{device.Name}\t{device.Category}" });
-                                }
-                            };
-
-                            device.Start(DateTime.Now);
-
-                            _devices.Add(mac, device);
-                            _d.Invoke(() => Devices.Add(device));
-                        }
-
+                        var device = CreateDeviceViewModel(names, mac, DateTime.MinValue);
                         device.Reach(target.IPAddress);
                     }
                 };
@@ -351,6 +289,46 @@ namespace LanChecker.ViewModels
             {
                 MessageBox.Show("UDPが終了しました\r\n" + exp);
             }
+        }
+
+        private DeviceViewModel CreateDeviceViewModel(Dictionary<string, DeviceInfo> names, string mac, DateTime lastReach)
+        {
+            DeviceViewModel device;
+            if (!_devices.TryGetValue(mac, out device))
+            {
+                DeviceInfo di;
+                if (!names.TryGetValue(mac, out di))
+                {
+                    di = new DeviceInfo(mac, null, "Unknown");
+                }
+                device = new DeviceViewModel(mac, di.Name, di.FileName);
+                device.Expired += () =>
+                {
+                    lock (_devices)
+                    {
+                        _devices.Remove(mac);
+                        _d.Invoke(() => Devices.Remove(device));
+                    }
+                };
+
+                if (lastReach != DateTime.MinValue) device.Start(lastReach);
+
+                device.IsInChanged += (isin, time) =>
+                {
+                    lock (_counterLock)
+                    {
+                        ReachCount += isin ? 1 : -1;
+                        File.AppendAllLines($"log\\log_{device.Category}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{isin}\t{device.MacAddress}\t{device.Name}\t{device.Category}" });
+                    }
+                };
+
+                if (lastReach == DateTime.MinValue) device.Start(DateTime.Now);
+
+                _devices.Add(mac, device);
+                _d.Invoke(() => Devices.Add(device));
+            }
+
+            return device;
         }
 
         public void Stop()
