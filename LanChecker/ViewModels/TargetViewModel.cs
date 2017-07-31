@@ -78,8 +78,8 @@ namespace LanChecker.ViewModels
         public TargetViewModel(uint host)
         {
             _mac = new byte[6];
-            _lastReach = DateTime.Now.AddDays(-3);
-            Elapsed = TimeSpan.FromDays(3);
+            _lastReach = DateTime.Now.AddDays(-3).AddSeconds(1);
+            Elapsed = TimeSpan.FromDays(3) - TimeSpan.FromSeconds(1);
 
             _host = host;
             IPAddress = (int)(host >> 24);
