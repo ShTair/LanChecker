@@ -165,8 +165,8 @@ namespace LanChecker.ViewModels
         public void Start(DateTime lastReach, DateTime lastIn)
         {
             LastReach = lastReach;
-            LastIn = lastIn;
             Elapsed = DateTime.Now - LastReach;
+            LastIn = lastIn;
 
             Update();
 
