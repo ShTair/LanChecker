@@ -15,7 +15,7 @@
             <CollectionViewSource.SortDescriptions>
                 <ComponentModel:SortDescription Direction="Descending" PropertyName="OrderTime" />
                 <ComponentModel:SortDescription Direction="Ascending" PropertyName="LastIn" />
-                <ComponentModel:SortDescription Direction="Ascending" PropertyName="LastIP" />
+                <ComponentModel:SortDescription Direction="Ascending" PropertyName="Name" />
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
         <cv:ColorConverter x:Key="ColorConverter" />
