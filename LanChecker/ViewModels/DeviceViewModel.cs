@@ -46,14 +46,26 @@ namespace LanChecker.ViewModels
                 if (_Elapsed == value) return;
                 _Elapsed = value;
 
-                ElapsedString = value.ToString(@"d\.hh\:mm");
+                if (Elapsed == TimeSpan.Zero)
+                {
+                    Status = 0;
+                    IsIn = true;
 
-                if (Elapsed == TimeSpan.Zero) Status = 0;
-                else if (Elapsed < TimeSpan.FromHours(1)) Status = 1;
-                else if (Elapsed < TimeSpan.FromDays(3)) Status = 2;
+                }
+                else if (Elapsed < TimeSpan.FromHours(1))
+                {
+                    Status = 1;
+                    IsIn = true;
+                }
+                else if (Elapsed < TimeSpan.FromDays(3))
+                {
+                    Status = 2;
+                    IsIn = false;
+                }
                 else
                 {
                     Status = 3;
+                    IsIn = false;
                     IsRunning = false;
                     Expired?.Invoke();
                 }
@@ -86,8 +98,6 @@ namespace LanChecker.ViewModels
                 _Status = value;
                 PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
                 PropertyChanged?.Invoke(this, _OrderTimeChangedEventArgs);
-
-                IsIn = value <= 1;
             }
         }
         private int _Status = -1;
@@ -100,6 +110,8 @@ namespace LanChecker.ViewModels
             {
                 if (_IsIn == value) return;
                 _IsIn = value;
+                if (value) LastIn = LastReach;
+
                 IsInChanged?.Invoke(value, LastReach);
                 PropertyChanged?.Invoke(this, _IsInChangedEventArgs);
             }
@@ -126,6 +138,19 @@ namespace LanChecker.ViewModels
         private int _LastIP;
         private PropertyChangedEventArgs _LastIPChangedEventArgs = new PropertyChangedEventArgs(nameof(LastIP));
 
+        public DateTime LastIn
+        {
+            get { return _LastIn; }
+            set
+            {
+                if (_LastIn == value) return;
+                _LastIn = value;
+                PropertyChanged?.Invoke(this, _LastInChangedEventArgs);
+            }
+        }
+        private DateTime _LastIn;
+        private PropertyChangedEventArgs _LastInChangedEventArgs = new PropertyChangedEventArgs(nameof(LastIn));
+
         #endregion
 
         public DeviceViewModel(string mac, string name, string category)
@@ -137,9 +162,10 @@ namespace LanChecker.ViewModels
             Category = category;
         }
 
-        public void Start(DateTime lastReach)
+        public void Start(DateTime lastReach, DateTime lastIn)
         {
             LastReach = lastReach;
+            LastIn = lastIn;
             Elapsed = DateTime.Now - LastReach;
 
             IsRunning = true;
@@ -151,9 +177,25 @@ namespace LanChecker.ViewModels
             while (IsRunning)
             {
                 await Task.Delay(5000);
-                if (_targets.Count != 0) continue;
+                if (_targets.Count == 0)
+                {
+                    Elapsed = DateTime.Now - LastReach;
+                }
 
-                Elapsed = DateTime.Now - LastReach;
+
+                if (Status == 0)
+                {
+                    if (LastIn < DateTime.Now.AddDays(-3))
+                    {
+                        LastIn = DateTime.MinValue;
+                        ElapsedString = TimeSpan.FromDays(3).ToString(@"d\.hh\:mm");
+                    }
+                    else
+                    {
+                        ElapsedString = (DateTime.Now - LastIn).ToString(@"d\.hh\:mm");
+                    }
+                }
+                else ElapsedString = Elapsed.ToString(@"d\.hh\:mm");
             }
         }
 

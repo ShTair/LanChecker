@@ -78,12 +78,15 @@ namespace LanChecker.ViewModels
 
             foreach (var item in from line in Settings.Default.LastDevices.Split('\n')
                                  let sp = line.Split('\t')
-                                 where sp.Length == 2
+                                 where sp.Length == 3
                                  select sp)
             {
                 var lastReach = DateTime.FromBinary(long.Parse(item[1]));
-                var device = CreateDeviceViewModel(names, item[0], lastReach);
+                var lastIn = DateTime.FromBinary(long.Parse(item[2]));
+                var device = CreateDeviceViewModel(names, item[0], lastReach, lastIn);
             }
+
+            ReachCount = Devices.Count(t => t.IsIn);
 
             _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t)).ToDictionary(t => t.IPAddress);
             _inTargets = new Dictionary<int, TargetViewModel>();
@@ -124,7 +127,7 @@ namespace LanChecker.ViewModels
                 {
                     lock (_devices)
                     {
-                        var device = CreateDeviceViewModel(names, mac, DateTime.MinValue);
+                        var device = CreateDeviceViewModel(names, mac, DateTime.MinValue, DateTime.Now);
                         device.Reach(target.IPAddress);
                     }
                 };
@@ -254,7 +257,7 @@ namespace LanChecker.ViewModels
             }
         }
 
-        private DeviceViewModel CreateDeviceViewModel(Dictionary<string, DeviceInfo> names, string mac, DateTime lastReach)
+        private DeviceViewModel CreateDeviceViewModel(Dictionary<string, DeviceInfo> names, string mac, DateTime lastReach, DateTime lastIn)
         {
             DeviceViewModel device;
             if (!_devices.TryGetValue(mac, out device))
@@ -274,7 +277,7 @@ namespace LanChecker.ViewModels
                     }
                 };
 
-                if (lastReach != DateTime.MinValue) device.Start(lastReach);
+                if (lastReach != DateTime.MinValue) device.Start(lastReach, lastIn);
 
                 device.IsInChanged += (isin, time) =>
                 {
@@ -285,7 +288,7 @@ namespace LanChecker.ViewModels
                     }
                 };
 
-                if (lastReach == DateTime.MinValue) device.Start(DateTime.Now);
+                if (lastReach == DateTime.MinValue) device.Start(DateTime.Now, DateTime.Now);
 
                 _devices.Add(mac, device);
                 _d.Invoke(() => Devices.Add(device));
@@ -298,7 +301,7 @@ namespace LanChecker.ViewModels
         {
             IsStoped = true;
             Settings.Default.Last = string.Join("\n", _allTargets.Values.Select(t => t.Serialize()));
-            Settings.Default.LastDevices = string.Join("\n", _devices.Values.Select(t => t.MacAddress + "\t" + t.LastReach.ToBinary()));
+            Settings.Default.LastDevices = string.Join("\n", _devices.Values.Select(t => t.MacAddress + "\t" + t.LastReach.ToBinary() + "\t" + t.LastIn.ToBinary()));
             Settings.Default.Save();
             _running.Wait();
         }

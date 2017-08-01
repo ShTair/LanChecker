@@ -14,7 +14,7 @@
         <CollectionViewSource x:Key="Source1" Source="{Binding Devices}" IsLiveSortingRequested="True">
             <CollectionViewSource.SortDescriptions>
                 <ComponentModel:SortDescription Direction="Descending" PropertyName="OrderTime" />
-                <ComponentModel:SortDescription Direction="Ascending" PropertyName="Name" />
+                <ComponentModel:SortDescription Direction="Ascending" PropertyName="LastIn" />
                 <ComponentModel:SortDescription Direction="Ascending" PropertyName="LastIP" />
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
