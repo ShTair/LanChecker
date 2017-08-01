@@ -182,21 +182,25 @@ namespace LanChecker.ViewModels
                     Elapsed = DateTime.Now - LastReach;
                 }
 
-
-                if (Status == 0)
-                {
-                    if (LastIn < DateTime.Now.AddDays(-3))
-                    {
-                        LastIn = DateTime.MinValue;
-                        ElapsedString = TimeSpan.FromDays(3).ToString(@"d\.hh\:mm");
-                    }
-                    else
-                    {
-                        ElapsedString = (DateTime.Now - LastIn).ToString(@"d\.hh\:mm");
-                    }
-                }
-                else ElapsedString = Elapsed.ToString(@"d\.hh\:mm");
+                Update();
             }
+        }
+
+        private void Update()
+        {
+            if (Status == 0)
+            {
+                if (LastIn < DateTime.Now.AddDays(-3))
+                {
+                    LastIn = DateTime.MinValue;
+                    ElapsedString = TimeSpan.FromDays(3).ToString(@"d\.hh\:mm");
+                }
+                else
+                {
+                    ElapsedString = (DateTime.Now - LastIn).ToString(@"d\.hh\:mm");
+                }
+            }
+            else ElapsedString = Elapsed.ToString(@"d\.hh\:mm");
         }
 
         public void Reach(int ip)
@@ -206,6 +210,8 @@ namespace LanChecker.ViewModels
 
             LastReach = DateTime.Now;
             Elapsed = TimeSpan.Zero;
+
+            Update();
         }
 
         public void Unreach(int ip)
@@ -214,6 +220,8 @@ namespace LanChecker.ViewModels
             if (_targets.Count != 0) return;
 
             Elapsed = DateTime.Now - LastReach;
+
+            Update();
         }
 
         public void Dispose()
