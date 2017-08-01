@@ -168,6 +168,8 @@ namespace LanChecker.ViewModels
             LastIn = lastIn;
             Elapsed = DateTime.Now - LastReach;
 
+            Update();
+
             IsRunning = true;
             Task.Run((Action)Run);
         }
