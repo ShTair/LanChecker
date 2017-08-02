@@ -15,6 +15,7 @@
             <CollectionViewSource.SortDescriptions>
                 <ComponentModel:SortDescription Direction="Descending" PropertyName="OrderTime" />
                 <ComponentModel:SortDescription Direction="Ascending" PropertyName="LastIn" />
+                <ComponentModel:SortDescription Direction="Ascending" PropertyName="Category" />
                 <ComponentModel:SortDescription Direction="Ascending" PropertyName="Name" />
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
@@ -110,6 +111,26 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Height="16" Margin="3,1" Text="{Binding MacAddress}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <ItemsControl ItemsSource="{Binding Source={StaticResource Source1}}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel>
+                                <i:Interaction.Behaviors>
+                                    <ei:FluidMoveBehavior AppliesTo="Children" Duration="0:0:10">
+                                        <ei:FluidMoveBehavior.EaseY>
+                                            <CubicEase EasingMode="EaseOut" />
+                                        </ei:FluidMoveBehavior.EaseY>
+                                    </ei:FluidMoveBehavior>
+                                </i:Interaction.Behaviors>
+                            </StackPanel>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Height="16" Margin="3,1" Text="{Binding Category}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

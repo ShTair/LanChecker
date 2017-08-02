@@ -267,7 +267,7 @@ namespace LanChecker.ViewModels
                 {
                     di = new DeviceInfo(mac, null, "Unknown");
                 }
-                device = new DeviceViewModel(mac, di.Name, di.FileName);
+                device = new DeviceViewModel(mac, di.Category, di.Name);
                 device.Expired += () =>
                 {
                     lock (_devices)

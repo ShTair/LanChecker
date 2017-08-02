@@ -20,9 +20,9 @@ namespace LanChecker.ViewModels
 
         public string MacAddress { get; private set; }
 
-        public string Name { get; private set; }
-
         public string Category { get; private set; }
+
+        public string Name { get; private set; }
 
         public DateTime LastReach
         {
@@ -153,13 +153,13 @@ namespace LanChecker.ViewModels
 
         #endregion
 
-        public DeviceViewModel(string mac, string name, string category)
+        public DeviceViewModel(string mac, string category, string name)
         {
             _targets = new HashSet<int>();
 
             MacAddress = mac;
-            Name = name;
             Category = category;
+            Name = name;
         }
 
         public void Start(DateTime lastReach, DateTime lastIn)

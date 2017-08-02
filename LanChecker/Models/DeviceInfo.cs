@@ -10,15 +10,15 @@ namespace LanChecker.Models
     {
         public string MacAddress { get; }
 
+        public string Category { get; }
+
         public string Name { get; }
 
-        public string FileName { get; }
-
-        public DeviceInfo(string mac, string name, string fileName)
+        public DeviceInfo(string mac, string category, string name)
         {
             MacAddress = mac;
             Name = name;
-            FileName = string.IsNullOrWhiteSpace(fileName) ? "Unknown" : fileName;
+            Category = string.IsNullOrWhiteSpace(category) ? "Unknown" : category;
         }
 
         private static Regex _r = new Regex(@"^(.+?)\t(.*?)\t(.*?)$", RegexOptions.Compiled);
