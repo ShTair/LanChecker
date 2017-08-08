@@ -49,7 +49,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Height="16" Margin="0,1" Background="{Binding Status, Converter={StaticResource ColorConverter}}" />
+                        <TextBlock Height="16" Margin="0,1" Background="{Binding ColorFlag, Converter={StaticResource ColorConverter}}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

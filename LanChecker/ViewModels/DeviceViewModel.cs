@@ -96,6 +96,7 @@ namespace LanChecker.ViewModels
             {
                 if (_Status == value) return;
                 _Status = value;
+                ColorFlag = value;
                 PropertyChanged?.Invoke(this, _StatusChangedEventArgs);
                 PropertyChanged?.Invoke(this, _OrderTimeChangedEventArgs);
             }
@@ -151,6 +152,19 @@ namespace LanChecker.ViewModels
         private DateTime _LastIn;
         private PropertyChangedEventArgs _LastInChangedEventArgs = new PropertyChangedEventArgs(nameof(LastIn));
 
+        public int ColorFlag
+        {
+            get { return _ColorFlag; }
+            set
+            {
+                if (_ColorFlag == value) return;
+                _ColorFlag = value;
+                PropertyChanged?.Invoke(this, _ColorFlagChangedEventArgs);
+            }
+        }
+        private int _ColorFlag;
+        private PropertyChangedEventArgs _ColorFlagChangedEventArgs = new PropertyChangedEventArgs(nameof(ColorFlag));
+
         #endregion
 
         public DeviceViewModel(string mac, string category, string name)
@@ -195,6 +209,7 @@ namespace LanChecker.ViewModels
                 if (LastIn < DateTime.Now.AddDays(-3))
                 {
                     LastIn = DateTime.MinValue;
+                    ColorFlag = -1;
                     ElapsedString = TimeSpan.FromDays(3).ToString(@"d\.hh\:mm");
                 }
                 else
