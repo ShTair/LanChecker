@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LanChecker.Models;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -15,7 +16,7 @@ namespace LanChecker.ViewModels
         public int IPAddress { get; }
 
         private byte[] _mac;
-        private DateTime _lastReach;
+        private DateTimeOffset _lastReach;
 
         public event Action<string> Reached;
         public event Action<string> Unreached;
@@ -65,7 +66,7 @@ namespace LanChecker.ViewModels
             set
             {
                 if (_MacAddress == value) return;
-                Unreached?.Invoke(_MacAddress);
+                if (_MacAddress != null) Unreached?.Invoke(_MacAddress);
                 _MacAddress = value;
                 PropertyChanged?.Invoke(this, _MacAddressChangedEventArgs);
             }
@@ -78,7 +79,7 @@ namespace LanChecker.ViewModels
         public TargetViewModel(uint host)
         {
             _mac = new byte[6];
-            _lastReach = DateTime.Now.AddDays(-3).AddSeconds(1);
+            _lastReach = DateTimeOffset.Now.AddDays(-3).AddSeconds(1);
             Elapsed = TimeSpan.FromDays(3) - TimeSpan.FromSeconds(1);
 
             _host = host;
@@ -89,7 +90,7 @@ namespace LanChecker.ViewModels
         {
             var result = SendArp();
 
-            var now = DateTime.Now;
+            var now = DateTimeOffset.Now;
 
             if (result)
             {
@@ -99,7 +100,7 @@ namespace LanChecker.ViewModels
             }
             else
             {
-                Unreached?.Invoke(MacAddress);
+                if (MacAddress != null) Unreached?.Invoke(MacAddress);
             }
 
             Elapsed = now - _lastReach;
@@ -109,7 +110,7 @@ namespace LanChecker.ViewModels
         {
             MacAddress = mac;
             Reached?.Invoke(MacAddress);
-            _lastReach = DateTime.Now;
+            _lastReach = DateTimeOffset.Now;
             Elapsed = TimeSpan.Zero;
         }
 
@@ -120,25 +121,13 @@ namespace LanChecker.ViewModels
             return result == 0;
         }
 
-        public string Serialize()
+        public void Update(TargetInfo ti)
         {
-            return $"{IPAddress}\t{MacAddress}\t{_lastReach.ToBinary()}\t{Status}";
-        }
+            if (ti.IPAddress != IPAddress) return;
 
-        public void Deserialize(string data)
-        {
-            try
-            {
-                var sp = data.Split('\t');
-                if (sp.Length != 4) return;
-
-                if (sp[0] != IPAddress.ToString()) return;
-
-                MacAddress = sp[1];
-                _lastReach = DateTime.FromBinary(long.Parse(sp[2]));
-                Status = int.Parse(sp[3]);
-            }
-            catch { }
+            MacAddress = ti.MacAddress;
+            _lastReach = ti.LastReach;
+            Status = ti.Status;
         }
 
         [DllImport("iphlpapi.dll", ExactSpelling = true)]

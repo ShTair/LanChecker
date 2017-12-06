@@ -1,9 +1,5 @@
-﻿using LanChecker.Models;
-using LanChecker.ViewModels;
+﻿using LanChecker.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Windows;
 
 namespace LanChecker.Views
@@ -13,21 +9,17 @@ namespace LanChecker.Views
     /// </summary>
     public partial class MainWindow : Window
     {
+        private MainViewModel ViewModel => DataContext as MainViewModel;
+
         public MainWindow()
         {
-            Dictionary<string, DeviceInfo> names = null;
-            if (File.Exists("mac.txt"))
-            {
-                names = DeviceInfo.Load("mac.txt").ToDictionary(t => t.MacAddress);
-            }
-
             InitializeComponent();
-            DataContext = new MainViewModel(names);
+            DataContext = new MainViewModel();
         }
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            ((MainViewModel)DataContext).Stop();
+            ViewModel.Stop();
         }
     }
 }

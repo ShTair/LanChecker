@@ -1,5 +1,5 @@
 ﻿using LanChecker.Models;
-using LanChecker.Properties;
+using Realms;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -63,27 +63,26 @@ namespace LanChecker.ViewModels
 
         #endregion
 
-        public MainViewModel(Dictionary<string, DeviceInfo> names)
+        public MainViewModel()
         {
             _d = Dispatcher.CurrentDispatcher;
+
+            RealmConfiguration.DefaultConfiguration = new RealmConfiguration(Path.Combine(Environment.CurrentDirectory, "db.realm"));
 
             _mlq = new MultiLaneQueue<Action>(4);
             _mlq.CountChanged += () => QueueCount = _mlq.Count;
 
-            if (names == null) names = new Dictionary<string, DeviceInfo>();
             Directory.CreateDirectory("log");
 
             _devices = new Dictionary<string, DeviceViewModel>();
             Devices = new ObservableCollection<DeviceViewModel>();
 
-            foreach (var item in from line in Settings.Default.LastDevices.Split('\n')
-                                 let sp = line.Split('\t')
-                                 where sp.Length == 3
-                                 select sp)
+            using (var realm = Realm.GetInstance())
             {
-                var lastReach = DateTime.FromBinary(long.Parse(item[1]));
-                var lastIn = DateTime.FromBinary(long.Parse(item[2]));
-                var device = CreateDeviceViewModel(names, item[0], lastReach, lastIn);
+                foreach (var di in realm.All<DeviceInfo>())
+                {
+                    var device = CreateDeviceViewModel(di);
+                }
             }
 
             ReachCount = Devices.Count(t => t.IsIn);
@@ -91,30 +90,29 @@ namespace LanChecker.ViewModels
             _allTargets = GenerateIps().Distinct().Select(t => new TargetViewModel(t)).ToDictionary(t => t.IPAddress);
             _inTargets = new Dictionary<int, TargetViewModel>();
 
-            foreach (var da in from line in Settings.Default.Last.Split('\n')
-                               let sp = line.Split('\t')
-                               where sp.Length == 4
-                               let ip = int.Parse(sp[0])
-                               select new { IP = ip, Line = line })
+            using (var realm = Realm.GetInstance())
             {
-                TargetViewModel target;
-                if (!_allTargets.TryGetValue(da.IP, out target)) continue;
-                target.Deserialize(da.Line);
-
-                if (target.Status != 3)
+                foreach (var ti in realm.All<TargetInfo>())
                 {
-                    lock (_inTargets)
+                    TargetViewModel target;
+                    if (!_allTargets.TryGetValue(ti.IPAddress, out target)) continue;
+                    target.Update(ti);
+
+                    if (target.Status != 3)
                     {
-                        if (!_inTargets.ContainsKey(target.IPAddress))
+                        lock (_inTargets)
                         {
-                            _inTargets.Add(target.IPAddress, target);
-                            if (target.Status <= 1)
+                            if (!_inTargets.ContainsKey(target.IPAddress))
                             {
-                                _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
-                            }
-                            else
-                            {
-                                _mlq.Enqueue(() => CheckInProcess(target, 2), 2);
+                                _inTargets.Add(target.IPAddress, target);
+                                if (target.Status <= 1)
+                                {
+                                    _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
+                                }
+                                else
+                                {
+                                    _mlq.Enqueue(() => CheckInProcess(target, 2), 2);
+                                }
                             }
                         }
                     }
@@ -127,7 +125,7 @@ namespace LanChecker.ViewModels
                 {
                     lock (_devices)
                     {
-                        var device = CreateDeviceViewModel(names, mac, DateTime.MinValue, DateTime.Now);
+                        var device = CreateDeviceViewModel(mac);
                         device.Reach(target.IPAddress);
                     }
                 };
@@ -257,27 +255,22 @@ namespace LanChecker.ViewModels
             }
         }
 
-        private DeviceViewModel CreateDeviceViewModel(Dictionary<string, DeviceInfo> names, string mac, DateTime lastReach, DateTime lastIn)
+        private DeviceViewModel CreateDeviceViewModel(DeviceInfo di)
         {
             DeviceViewModel device;
-            if (!_devices.TryGetValue(mac, out device))
+            if (!_devices.TryGetValue(di.MacAddress, out device))
             {
-                DeviceInfo di;
-                if (!names.TryGetValue(mac, out di))
-                {
-                    di = new DeviceInfo(mac, null, "Unknown");
-                }
-                device = new DeviceViewModel(mac, di.Category, di.Name);
+                device = new DeviceViewModel(di.MacAddress, di.Category, di.Name);
                 device.Expired += () =>
                 {
                     lock (_devices)
                     {
-                        _devices.Remove(mac);
+                        _devices.Remove(device.MacAddress);
                         _d.Invoke(() => Devices.Remove(device));
                     }
                 };
 
-                if (lastReach != DateTime.MinValue) device.Start(lastReach, lastIn);
+                device.Start(di.LastReach, di.LastIn);
 
                 device.IsInChanged += (isin, time) =>
                 {
@@ -288,7 +281,52 @@ namespace LanChecker.ViewModels
                     }
                 };
 
-                if (lastReach == DateTime.MinValue) device.Start(DateTime.Now, DateTime.Now);
+                _devices.Add(di.MacAddress, device);
+                _d.Invoke(() => Devices.Add(device));
+            }
+
+            return device;
+        }
+
+        private DeviceViewModel CreateDeviceViewModel(string mac)
+        {
+            DeviceViewModel device;
+            if (!_devices.TryGetValue(mac, out device))
+            {
+                using (var realm = Realm.GetInstance())
+                {
+                    var di = realm.Find<DeviceInfo>(mac);
+                    if (di == null)
+                    {
+                        realm.Write(() =>
+                        {
+                            di = new DeviceInfo { MacAddress = mac, Category = "Unknown", Name = "Unknown" };
+                            realm.Add(di);
+                        });
+                    }
+
+                    device = new DeviceViewModel(mac, di.Category, di.Name);
+                }
+
+                device.Expired += () =>
+                {
+                    lock (_devices)
+                    {
+                        _devices.Remove(mac);
+                        _d.Invoke(() => Devices.Remove(device));
+                    }
+                };
+
+                device.IsInChanged += (isin, time) =>
+                {
+                    lock (_counterLock)
+                    {
+                        ReachCount += isin ? 1 : -1;
+                        File.AppendAllLines($"log\\log_{device.Category}.txt", new[] { $"{DateTime.Now:yyyy/MM/dd_HH:mm:ss}\t{time:yyyy/MM/dd_HH:mm:ss}\t{isin}\t{device.MacAddress}\t{device.Name}\t{device.Category}" });
+                    }
+                };
+
+                device.Start(DateTimeOffset.Now, DateTimeOffset.Now);
 
                 _devices.Add(mac, device);
                 _d.Invoke(() => Devices.Add(device));
@@ -300,9 +338,6 @@ namespace LanChecker.ViewModels
         public void Stop()
         {
             IsStoped = true;
-            Settings.Default.Last = string.Join("\n", _allTargets.Values.Select(t => t.Serialize()));
-            Settings.Default.LastDevices = string.Join("\n", _devices.Values.Select(t => t.MacAddress + "\t" + t.LastReach.ToBinary() + "\t" + t.LastIn.ToBinary()));
-            Settings.Default.Save();
             _running.Wait();
         }
 

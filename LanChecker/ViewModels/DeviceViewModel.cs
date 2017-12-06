@@ -10,7 +10,7 @@ namespace LanChecker.ViewModels
         private HashSet<int> _targets;
 
         public event Action Expired;
-        public event Action<bool, DateTime> IsInChanged;
+        public event Action<bool, DateTimeOffset> IsInChanged;
 
         #region properties
 
@@ -24,7 +24,7 @@ namespace LanChecker.ViewModels
 
         public string Name { get; private set; }
 
-        public DateTime LastReach
+        public DateTimeOffset LastReach
         {
             get { return _LastReach; }
             set
@@ -35,7 +35,7 @@ namespace LanChecker.ViewModels
                 PropertyChanged?.Invoke(this, _OrderTimeChangedEventArgs);
             }
         }
-        private DateTime _LastReach;
+        private DateTimeOffset _LastReach;
         private PropertyChangedEventArgs _LastReachChangedEventArgs = new PropertyChangedEventArgs(nameof(LastReach));
 
         public TimeSpan Elapsed
@@ -120,9 +120,9 @@ namespace LanChecker.ViewModels
         private bool _IsIn;
         private PropertyChangedEventArgs _IsInChangedEventArgs = new PropertyChangedEventArgs(nameof(IsIn));
 
-        public DateTime OrderTime
+        public DateTimeOffset OrderTime
         {
-            get { return Status <= 1 ? DateTime.MaxValue : LastReach; }
+            get { return Status <= 1 ? DateTimeOffset.MaxValue : LastReach; }
         }
         private PropertyChangedEventArgs _OrderTimeChangedEventArgs = new PropertyChangedEventArgs(nameof(OrderTime));
 
@@ -139,7 +139,7 @@ namespace LanChecker.ViewModels
         private int _LastIP;
         private PropertyChangedEventArgs _LastIPChangedEventArgs = new PropertyChangedEventArgs(nameof(LastIP));
 
-        public DateTime LastIn
+        public DateTimeOffset LastIn
         {
             get { return _LastIn; }
             set
@@ -149,7 +149,7 @@ namespace LanChecker.ViewModels
                 PropertyChanged?.Invoke(this, _LastInChangedEventArgs);
             }
         }
-        private DateTime _LastIn;
+        private DateTimeOffset _LastIn;
         private PropertyChangedEventArgs _LastInChangedEventArgs = new PropertyChangedEventArgs(nameof(LastIn));
 
         public int ColorFlag
@@ -176,10 +176,10 @@ namespace LanChecker.ViewModels
             Name = name;
         }
 
-        public void Start(DateTime lastReach, DateTime lastIn)
+        public void Start(DateTimeOffset lastReach, DateTimeOffset lastIn)
         {
             LastReach = lastReach;
-            Elapsed = DateTime.Now - LastReach;
+            Elapsed = DateTimeOffset.Now - LastReach;
             LastIn = lastIn;
 
             Update();
@@ -195,7 +195,7 @@ namespace LanChecker.ViewModels
                 await Task.Delay(5000);
                 if (_targets.Count == 0)
                 {
-                    Elapsed = DateTime.Now - LastReach;
+                    Elapsed = DateTimeOffset.Now - LastReach;
                 }
 
                 Update();
@@ -206,15 +206,15 @@ namespace LanChecker.ViewModels
         {
             if (Status == 0)
             {
-                if (LastIn < DateTime.Now.AddDays(-3))
+                if (LastIn < DateTimeOffset.Now.AddDays(-3))
                 {
-                    LastIn = DateTime.MinValue;
+                    LastIn = DateTimeOffset.MinValue;
                     ColorFlag = -1;
                     ElapsedString = TimeSpan.FromDays(3).ToString(@"d\.hh\:mm");
                 }
                 else
                 {
-                    ElapsedString = (DateTime.Now - LastIn).ToString(@"d\.hh\:mm");
+                    ElapsedString = (DateTimeOffset.Now - LastIn).ToString(@"d\.hh\:mm");
                 }
             }
             else ElapsedString = Elapsed.ToString(@"d\.hh\:mm");
@@ -225,7 +225,7 @@ namespace LanChecker.ViewModels
             _targets.Add(ip);
             LastIP = ip;
 
-            LastReach = DateTime.Now;
+            LastReach = DateTimeOffset.Now;
             Elapsed = TimeSpan.Zero;
 
             Update();
@@ -236,7 +236,7 @@ namespace LanChecker.ViewModels
             _targets.Remove(ip);
             if (_targets.Count != 0) return;
 
-            Elapsed = DateTime.Now - LastReach;
+            Elapsed = DateTimeOffset.Now - LastReach;
 
             Update();
         }

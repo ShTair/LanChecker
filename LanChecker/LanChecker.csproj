@@ -86,6 +86,7 @@
     </Compile>
     <Compile Include="Converters\ColorConverter.cs" />
     <Compile Include="Models\DeviceInfo.cs" />
+    <Compile Include="Models\TargetInfo.cs" />
     <Compile Include="ViewModels\DeviceViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\MultiLaneQueue.cs" />
