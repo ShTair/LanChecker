@@ -61,6 +61,19 @@ namespace LanChecker.ViewModels
         private int _QueueCount;
         private PropertyChangedEventArgs _QueueCountChangedEventArgs = new PropertyChangedEventArgs(nameof(QueueCount));
 
+        public bool IsDhcpEnabled
+        {
+            get { return _IsDhcpEnabled; }
+            set
+            {
+                if (_IsDhcpEnabled == value) return;
+                _IsDhcpEnabled = value;
+                PropertyChanged?.Invoke(this, _IsDhcpEnabledChangedEventArgs);
+            }
+        }
+        private bool _IsDhcpEnabled;
+        private PropertyChangedEventArgs _IsDhcpEnabledChangedEventArgs = new PropertyChangedEventArgs(nameof(IsDhcpEnabled));
+
         #endregion
 
         public MainViewModel(Dictionary<string, DeviceInfo> names)
@@ -216,44 +229,50 @@ namespace LanChecker.ViewModels
 
         private async Task ReceivingDhcp()
         {
-            try
+            while (true)
             {
-                var udp = new UdpClient(68);
-                while (true)
+                try
                 {
-                    var result = await udp.ReceiveAsync();
-                    var ip = result.Buffer[19];
-                    var mac = string.Join(":", result.Buffer.Skip(28).Take(6).Select(t => t.ToString("X2")));
-                    Console.WriteLine($"DHCP {mac} {ip}");
-
-                    if (ip != 0)
+                    var udp = new UdpClient(68);
+                    IsDhcpEnabled = true;
+                    while (true)
                     {
-                        lock (_inTargets)
-                        {
-                            TargetViewModel target;
-                            if (!_inTargets.TryGetValue(ip, out target))
-                            {
-                                if (_allTargets.TryGetValue(ip, out target))
-                                {
-                                    _inTargets.Add(target.IPAddress, target);
-                                    Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(_ =>
-                                    {
-                                        _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
-                                    });
-                                }
-                            }
+                        var result = await udp.ReceiveAsync();
+                        var ip = result.Buffer[19];
+                        var mac = string.Join(":", result.Buffer.Skip(28).Take(6).Select(t => t.ToString("X2")));
+                        Console.WriteLine($"DHCP {mac} {ip}");
 
-                            if (target != null)
+
+                        if (ip != 0)
+                        {
+                            lock (_inTargets)
                             {
-                                target.Find(mac);
+                                TargetViewModel target;
+                                if (!_inTargets.TryGetValue(ip, out target))
+                                {
+                                    if (_allTargets.TryGetValue(ip, out target))
+                                    {
+                                        _inTargets.Add(target.IPAddress, target);
+                                        Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(_ =>
+                                        {
+                                            _mlq.Enqueue(() => CheckInProcess(target, 0), 0);
+                                        });
+                                    }
+                                }
+
+                                if (target != null)
+                                {
+                                    target.Find(mac);
+                                }
                             }
                         }
                     }
                 }
-            }
-            catch (Exception exp)
-            {
-                MessageBox.Show("UDPが終了しました\r\n" + exp);
+                catch
+                {
+                    IsDhcpEnabled = false;
+                    await Task.Delay(10000);
+                }
             }
         }
 
