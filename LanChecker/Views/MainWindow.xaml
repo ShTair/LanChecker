@@ -29,6 +29,8 @@
                     <TextBlock Text="{Binding ReachCount}" />
                     <TextBlock Text=", Queue: " />
                     <TextBlock Text="{Binding QueueCount}" />
+                    <TextBlock Text=", DHCP: " />
+                    <TextBlock Text="{Binding IsDhcpEnabled}" />
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
